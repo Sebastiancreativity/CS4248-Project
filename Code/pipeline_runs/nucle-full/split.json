@@ -1,0 +1,24 @@
+{
+  "source": "C:\\Users\\Ming Zhe\\Desktop\\CS4248 Project\\Code\\data\\nucle-full\\nucle.train.gold.bea19.src",
+  "target": "C:\\Users\\Ming Zhe\\Desktop\\CS4248 Project\\Code\\data\\nucle-full\\nucle.train.gold.bea19.tgt",
+  "source_sha256": "b06ca7cd6f89ef87a68625d936abf45167a6123377e0236368d543eb208dc186",
+  "target_sha256": "2936454882e470ec4629448f7f20c5b7f6f6217f846d031edbc34f765843ddf4",
+  "seed": 42,
+  "dev_size": 200,
+  "test_size": 200,
+  "total_pairs": 57151,
+  "split_sha256": {
+    "train": {
+      "src": "86dc30b9814cc484ccbe2a4a45c8e4ee320ca66dff53759b62935fe3ebae8b77",
+      "tgt": "8ed9b5298eaa2ed40d6d162d38c33a2a7f3fd8c43452601de078f9d7890faa12"
+    },
+    "dev": {
+      "src": "5120b90c56284846c659b0361b8fd684c68dc7c9f898fec73257c8e115acade8",
+      "tgt": "044573c5e790fbfb42f9fc11ec505b9279adef3648df280cbdc586c06bb692fa"
+    },
+    "test": {
+      "src": "354347fe779a498682ded4b3c45e788d738cb72dbd0bee173f14c2ac997ff01a",
+      "tgt": "ab6da5b9ca158d31d093c94043d2195e7f18f4264cd264acc5980f4529a543e3"
+    }
+  }
+}
