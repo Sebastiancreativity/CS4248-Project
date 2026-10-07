@@ -1,0 +1,208 @@
+{
+  "dev_wmt": {
+    "groups": {
+      "domain:news": {
+        "n": 527,
+        "bleu": 19.36,
+        "chrfpp": 46.2,
+        "comet22": 79.6
+      },
+      "domain:user_review": {
+        "n": 506,
+        "bleu": 9.96,
+        "chrfpp": 35.62,
+        "comet22": 75.94
+      },
+      "length:16-40": {
+        "n": 364,
+        "bleu": 15.11,
+        "chrfpp": 39.43,
+        "comet22": 79.18
+      },
+      "length:41+": {
+        "n": 442,
+        "bleu": 16.06,
+        "chrfpp": 43.71,
+        "comet22": 77.72
+      },
+      "length:<=15": {
+        "n": 227,
+        "bleu": 11.33,
+        "chrfpp": 31.23,
+        "comet22": 75.79
+      }
+    },
+    "worst": [
+      {
+        "i": 467,
+        "comet": 0.391,
+        "src": "”高亚轩说。",
+        "hyp": "High Sky轩 said.",
+        "ref": "\"Gao Yaxuan said."
+      },
+      {
+        "i": 577,
+        "comet": 0.416,
+        "src": "就酱紫。",
+        "hyp": "So what you're saying is...",
+        "ref": "The sauce alone."
+      },
+      {
+        "i": 947,
+        "comet": 0.455,
+        "src": "奸商啊",
+        "hyp": "Scoundrel!",
+        "ref": "Untrustworthy businessman ah"
+      },
+      {
+        "i": 729,
+        "comet": 0.476,
+        "src": "撇开网文这个文化现象不谈，全职不失为一本不错的书。",
+        "hyp": "Cutting to the chase is not bad as a book either.",
+        "ref": "Full-time is still a terrific book even when the cultural phenomena of internet writing is disregarded."
+      },
+      {
+        "i": 963,
+        "comet": 0.484,
+        "src": "买到别人拆开过的",
+        "hyp": "To have bought something that has been opened before",
+        "ref": "Purchase the unwrapped products of others"
+      },
+      {
+        "i": 795,
+        "comet": 0.497,
+        "src": "不信邪又开了一片同款的，没有那么重的味道了，现在正在敷。",
+        "hyp": "Not buying it either; another identical one is out there with less weight and flavor now being used up.",
+        "ref": "Another slice of the same kind, which doesn't have a strong smell and is currently being applied, was opened by Buxinxie."
+      },
+      {
+        "i": 886,
+        "comet": 0.501,
+        "src": "是横杠的！",
+        "hyp": "It's an en-dash!",
+        "ref": "A horizontal bar is what it is!"
+      },
+      {
+        "i": 653,
+        "comet": 0.502,
+        "src": "只是前面那个帽。",
+        "hyp": "It's just that hat in front of you.",
+        "ref": "Only the front cap."
+      },
+      {
+        "i": 276,
+        "comet": 0.511,
+        "src": "莫德罗于 1928 年出生在当时的德国小镇 Jasenitz（现为波兰的 Jasienica），并接受过机械师培训。",
+        "hyp": "Maderlo was born in the German village of Jasenitz (now part of Poland) and received training as an electrician.",
+        "ref": "In 1999, he told Reuters he did not want the old East Germany to return but said it should be recognized for its achievements."
+      },
+      {
+        "i": 979,
+        "comet": 0.516,
+        "src": "规矩是死的，人是活的，联系你们客服，怎么处理的？",
+        "hyp": "How did you handle it with your customer service?",
+        "ref": "Rules are no longer valid, people are still living, what should you do? Contact your customer service"
+      }
+    ]
+  },
+  "dev_short": {
+    "groups": {
+      "domain:tatoeba": {
+        "n": 992,
+        "bleu": 37.81,
+        "chrfpp": 57.67,
+        "comet22": 90.12
+      },
+      "length:16-40": {
+        "n": 123,
+        "bleu": 30.92,
+        "chrfpp": 54.85,
+        "comet22": 88.48
+      },
+      "length:41+": {
+        "n": 4,
+        "bleu": 17.93,
+        "chrfpp": 44.3,
+        "comet22": 81.51
+      },
+      "length:<=15": {
+        "n": 865,
+        "bleu": 40.43,
+        "chrfpp": 58.84,
+        "comet22": 90.4
+      }
+    },
+    "worst": [
+      {
+        "i": 651,
+        "comet": 0.47,
+        "src": "左看右看",
+        "hyp": "Left and right look at",
+        "ref": "Look to your left, look to your right."
+      },
+      {
+        "i": 835,
+        "comet": 0.475,
+        "src": "做多少算多少。",
+        "hyp": "Do as you please.",
+        "ref": "Catch as catch can."
+      },
+      {
+        "i": 110,
+        "comet": 0.501,
+        "src": "强宾不压主。",
+        "hyp": "Power does not subdue virtue.",
+        "ref": "A guest should not try to make himself superior to the host."
+      },
+      {
+        "i": 255,
+        "comet": 0.506,
+        "src": "花子虚张声势。",
+        "hyp": "Hu Zi Xiu displayed his bravado.",
+        "ref": "Hanako called his bluff."
+      },
+      {
+        "i": 979,
+        "comet": 0.507,
+        "src": "我的没有你的好。",
+        "hyp": "My lack of you is not as good.",
+        "ref": "Mine is not so good as yours."
+      },
+      {
+        "i": 336,
+        "comet": 0.514,
+        "src": "贪得无厌。",
+        "hyp": "Greed without bounds.",
+        "ref": "Appetite comes with eating."
+      },
+      {
+        "i": 143,
+        "comet": 0.529,
+        "src": "爱不释手",
+        "hyp": "Love it not to let go.",
+        "ref": "Something can't get out of hand."
+      },
+      {
+        "i": 621,
+        "comet": 0.576,
+        "src": "路遥知马力，日久见人心。",
+        "hyp": "As the saying goes, \"The more you ride, the stronger your horse becomes; and after much time has passed, one can see the true heart of people.\"",
+        "ref": "It's in times like these that the character of a person becomes apparent."
+      },
+      {
+        "i": 645,
+        "comet": 0.578,
+        "src": "让我获胜，但如果我不能获胜，让我在尝试时可以勇敢。",
+        "hyp": "Let me win; it's not about winning that matters.",
+        "ref": "Let me win. But if I cannot win, let me be brave in the attempt."
+      },
+      {
+        "i": 144,
+        "comet": 0.578,
+        "src": "她欣喜若狂。",
+        "hyp": "She was elated.",
+        "ref": "She was beside herself with joy."
+      }
+    ]
+  }
+}

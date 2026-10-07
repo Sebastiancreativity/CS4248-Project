@@ -1,0 +1,54 @@
+{
+  "seed": 4248,
+  "removed": {
+    "dev_wmt": {
+      "domain:manuals": 487
+    },
+    "dev_short": {
+      "overlap:tatoeba_test": 7,
+      "duplicate": 1
+    },
+    "dev_alma": {}
+  },
+  "dev_wmt": {
+    "n": 1033,
+    "mean_chars": 41.5,
+    "median_chars": 34,
+    "max_chars": 193,
+    "share_le15_chars": 0.22,
+    "domains": {
+      "news": 527,
+      "user_review": 506
+    },
+    "documents": 119
+  },
+  "dev_short": {
+    "n": 992,
+    "mean_chars": 11.0,
+    "median_chars": 10,
+    "max_chars": 64,
+    "share_le15_chars": 0.872,
+    "converted_t2s": 483
+  },
+  "dev_alma": {
+    "n": 1002,
+    "mean_chars": 47.9,
+    "median_chars": 43,
+    "max_chars": 232,
+    "share_le15_chars": 0.03
+  },
+  "test_tatoeba": {
+    "n": 469,
+    "mean_chars": 8.8,
+    "median_chars": 8,
+    "max_chars": 39,
+    "share_le15_chars": 0.934
+  },
+  "test_wmt22": {
+    "n": 1875,
+    "mean_chars": 39.2,
+    "median_chars": 32,
+    "max_chars": 299,
+    "share_le15_chars": 0.23
+  }
+}

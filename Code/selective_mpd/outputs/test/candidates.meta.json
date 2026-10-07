@@ -1,9 +1,0 @@
-{
-  "model": "C:\\Users\\Ming Zhe\\Desktop\\CS4248 Project\\Code\\pipeline_runs\\nucle-full-grouped\\model",
-  "sentences": 200,
-  "device": "cuda",
-  "fp16": true,
-  "num_beams": 4,
-  "three_pass_seconds": 24.420246300054714,
-  "seconds_per_sentence_pass": 0.04070041050009119
-}

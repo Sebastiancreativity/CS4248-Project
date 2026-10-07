@@ -1,0 +1,29 @@
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+[qwen2.5-1.5b] dev_wmt: 1033 sentences
+  16/1033  32/1033  48/1033  64/1033  80/1033  96/1033  112/1033  128/1033  144/1033  160/1033  176/1033  192/1033  208/1033  224/1033  240/1033  256/1033  272/1033  288/1033  304/1033  320/1033  336/1033  352/1033  368/1033  384/1033  400/1033  416/1033  432/1033  448/1033  464/1033  480/1033  496/1033  512/1033  528/1033  544/1033  560/1033  576/1033  592/1033  608/1033  624/1033  640/1033  656/1033  672/1033  688/1033  704/1033  720/1033  736/1033  752/1033  768/1033  784/1033  800/1033  816/1033  832/1033  848/1033  864/1033  880/1033  896/1033  912/1033  928/1033  944/1033  960/1033  976/1033  992/1033  1008/1033  1024/1033  1033/1033
+[qwen2.5-1.5b] dev_short: 992 sentences
+  16/992  32/992  48/992  64/992  80/992  96/992  112/992  128/992  144/992  160/992  176/992  192/992  208/992  224/992  240/992  256/992  272/992  288/992  304/992  320/992  336/992  352/992  368/992  384/992  400/992  416/992  432/992  448/992  464/992  480/992  496/992  512/992  528/992  544/992  560/992  576/992  592/992  608/992  624/992  640/992  656/992  672/992  688/992  704/992  720/992  736/992  752/992  768/992  784/992  800/992  816/992  832/992  848/992  864/992  880/992  896/992  912/992  928/992  944/992  960/992  976/992  992/992W1007 14:20:04.574000 20128 Lib\site-packages\torch\utils\flop_counter.py:29] triton not found; flop counting will not work for triton kernels
+
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files: 100%|██████████| 5/5 [00:00<00:00, 555.63it/s]
+Lightning automatically upgraded your loaded checkpoint from v1.8.3.post1 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint C:\Users\unshe\.cache\huggingface\hub\models--Unbabel--wmt22-comet-da\snapshots\2760a223ac957f30acfb18c8aa649b01cf1d75f2\checkpoints\model.ckpt`
+Encoder model frozen.
+D:\NUS Class\CS4248 Project\.venv\Lib\site-packages\pytorch_lightning\core\saving.py:216: Found keys that are not in the model state dict but in the checkpoint: ['encoder.model.embeddings.position_ids']
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+💡 Tip: For seamless cloud uploads and versioning, try installing [litmodels](https://pypi.org/project/litmodels/) to enable LitModelCheckpoint, which syncs automatically with the Lightning model registry.
+You are using a CUDA device ('NVIDIA GeForce RTX 5070 Ti Laptop GPU') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+D:\NUS Class\CS4248 Project\.venv\Lib\site-packages\pytorch_lightning\utilities\_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+{"model": "qwen2.5-1.5b", "hf": "Qwen/Qwen2.5-1.5B-Instruct", "dev": "dev_wmt", "n": 1033, "bleu": 15.59, "chrfpp": 42.0, "comet22": 77.73, "chinese_rate": 0.0077, "empty_rate": 0.001, "repeat_rate": 0.0019, "sent_per_s": 0.92, "gen_seconds": 1117.6, "load_seconds": 4.2, "peak_gpu_gb": 3.15, "gpu_power_limit_w": 30.0, "batch_size": 16, "limit": 0, "time": "2026-10-07T14:20:48"}
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files: 100%|██████████| 5/5 [00:00<00:00, 1667.85it/s]
+Lightning automatically upgraded your loaded checkpoint from v1.8.3.post1 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint C:\Users\unshe\.cache\huggingface\hub\models--Unbabel--wmt22-comet-da\snapshots\2760a223ac957f30acfb18c8aa649b01cf1d75f2\checkpoints\model.ckpt`
+Encoder model frozen.
+D:\NUS Class\CS4248 Project\.venv\Lib\site-packages\pytorch_lightning\core\saving.py:216: Found keys that are not in the model state dict but in the checkpoint: ['encoder.model.embeddings.position_ids']
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+💡 Tip: For seamless cloud uploads and versioning, try installing [litmodels](https://pypi.org/project/litmodels/) to enable LitModelCheckpoint, which syncs automatically with the Lightning model registry.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+D:\NUS Class\CS4248 Project\.venv\Lib\site-packages\pytorch_lightning\utilities\_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+{"model": "qwen2.5-1.5b", "hf": "Qwen/Qwen2.5-1.5B-Instruct", "dev": "dev_short", "n": 992, "bleu": 37.79, "chrfpp": 57.59, "comet22": 90.06, "chinese_rate": 0.001, "empty_rate": 0.001, "repeat_rate": 0.0, "sent_per_s": 6.3, "gen_seconds": 157.5, "load_seconds": 4.2, "peak_gpu_gb": 3.15, "gpu_power_limit_w": 30.0, "batch_size": 16, "limit": 0, "time": "2026-10-07T14:21:07"}
