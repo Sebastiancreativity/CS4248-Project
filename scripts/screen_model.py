@@ -14,11 +14,11 @@ from pathlib import Path
 
 import sacrebleu
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer, BitsAndBytesConfig
 
-ROOT = Path(__file__).resolve().parents[2]
-DEV = ROOT / "official" / "data" / "dev"
-RES = ROOT / "official" / "results" / "screening"
+ROOT = Path(__file__).resolve().parents[1]
+DEV = ROOT / "data" / "dev"
+RES = ROOT / "results" / "screening"
 
 MODELS = {
     "qwen2.5-1.5b": dict(hf="Qwen/Qwen2.5-1.5B-Instruct"),
@@ -27,6 +27,8 @@ MODELS = {
     "hunyuan-mt-7b": dict(hf="tencent/Hunyuan-MT-7B", four_bit=True),
     "tower-7b": dict(hf="Unbabel/TowerInstruct-7B-v0.2", four_bit=True),
     "alma-7b": dict(hf="haoranxu/ALMA-7B", four_bit=True, chat=False),
+    "madlad400-3b": dict(hf="google/madlad400-3b-mt", seq2seq=True, target_prefix="<2en> "),
+    "nllb-1.3b": dict(hf="facebook/nllb-200-distilled-1.3B", seq2seq=True, src_lang="zho_Hans", tgt_lang="eng_Latn"),
 }
 
 PROMPT = "Translate the following Chinese text into English. Output only the English translation.\n\nChinese: {src}"
@@ -40,19 +42,26 @@ def read(p):
 
 
 def load(cfg):
-    tok = AutoTokenizer.from_pretrained(cfg["hf"], padding_side="left")
+    tok_kwargs = {"padding_side": "right" if cfg.get("seq2seq") else "left"}
+    if cfg.get("src_lang"):
+        tok_kwargs["src_lang"] = cfg["src_lang"]
+    tok = AutoTokenizer.from_pretrained(cfg["hf"], **tok_kwargs)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
     if cfg.get("four_bit"):
         q = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
                                bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True)
-        model = AutoModelForCausalLM.from_pretrained(cfg["hf"], quantization_config=q, device_map="cuda")
+        cls = AutoModelForSeq2SeqLM if cfg.get("seq2seq") else AutoModelForCausalLM
+        model = cls.from_pretrained(cfg["hf"], quantization_config=q, device_map="cuda")
     else:
-        model = AutoModelForCausalLM.from_pretrained(cfg["hf"], dtype=torch.bfloat16).to("cuda")
+        cls = AutoModelForSeq2SeqLM if cfg.get("seq2seq") else AutoModelForCausalLM
+        model = cls.from_pretrained(cfg["hf"], dtype=torch.bfloat16).to("cuda")
     return tok, model.eval()
 
 
 def build_prompt(tok, cfg, src):
+    if cfg.get("seq2seq"):
+        return cfg.get("target_prefix", "") + src
     if cfg.get("chat", True) and tok.chat_template:
         return tok.apply_chat_template([{"role": "user", "content": PROMPT.format(src=src)}],
                                        tokenize=False, add_generation_prompt=True)
@@ -82,10 +91,14 @@ def translate(tok, model, cfg, src, batch_size, max_new_tokens):
     for b in range(0, len(order), batch_size):
         idx = order[b:b + batch_size]
         enc = tok([build_prompt(tok, cfg, src[i]) for i in idx], return_tensors="pt",
-                  padding=True, add_special_tokens=False).to("cuda")
-        gen = model.generate(**enc, do_sample=False, num_beams=1, max_new_tokens=max_new_tokens,
-                             pad_token_id=tok.pad_token_id)
-        for i, g in zip(idx, tok.batch_decode(gen[:, enc["input_ids"].shape[1]:], skip_special_tokens=True)):
+                  padding=True, add_special_tokens=bool(cfg.get("seq2seq"))).to("cuda")
+        kwargs = {"do_sample": False, "num_beams": 1, "max_new_tokens": max_new_tokens,
+                  "pad_token_id": tok.pad_token_id}
+        if cfg.get("tgt_lang"):
+            kwargs["forced_bos_token_id"] = tok.convert_tokens_to_ids(cfg["tgt_lang"])
+        gen = model.generate(**enc, **kwargs)
+        output = gen if cfg.get("seq2seq") else gen[:, enc["input_ids"].shape[1]:]
+        for i, g in zip(idx, tok.batch_decode(output, skip_special_tokens=True)):
             raw[i] = g
         print(f"  {min(b + batch_size, len(src))}/{len(src)}", end="\r", flush=True)
     print()
@@ -167,7 +180,8 @@ def log_row(a, cfg, dev, src, ref, hyp, run_info):
         empty_rate=round(sum(not h for h in hyp) / n, 4),
         repeat_rate=round(sum(repeats(h) for h in hyp) / n, 4),
         **run_info,
-        prompt=PROMPT if cfg.get("chat", True) else PLAIN_PROMPT,
+        prompt=(cfg.get("target_prefix", "source language token") if cfg.get("seq2seq") else
+                PROMPT if cfg.get("chat", True) else PLAIN_PROMPT),
         time=datetime.now().isoformat(timespec="seconds"),
     )
     with open(RES / "screening.jsonl", "a", encoding="utf-8") as fh:

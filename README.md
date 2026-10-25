@@ -97,6 +97,20 @@ Reports:
 
 ## 6. Reproducibility and Data-Integrity Checklist
 
+### Three-model ensemble experiments
+
+Edit `combinations.json`: it is an array of three-model arrays, with ten examples ready to run. Model names must match the keys in `scripts/screen_model.py`. Run from this repository root:
+
+```bash
+python scripts/run_ensembles.py --combinations combinations.json --comet
+```
+
+The runner generates missing model outputs once per model and development set, then reuses the saved hypotheses for every combination. By default, it runs both selection methods on those same candidates: reference-free COMETKiwi quality estimation (Chinese source plus English candidate) and pairwise chrF++ agreement. COMETKiwi scores are cached by model and development set. Use `--selector cometkiwi` or `--selector chrf` to run just one method. It then reports reference-based BLEU, chrF++ and, with `--comet`, COMET. Outputs are written to `results/ensembles/scores_comparison.csv`, separate `scores_cometkiwi.csv` and `scores_chrf.csv` files, and one `.hyp` file per combination, selector, and development set. Use `--no-generate` to score only existing model outputs, or `--dev dev_wmt` to run only one development set. COMETKiwi may require accepting its model license on Hugging Face before first download.
+
+`dev_wmt` (1,033 referenced news/user-review sentences) and `dev_short` (992 referenced short sentences) are for model and ensemble selection. `dev_alma` (1,002 referenced sentences) is reserved for LoRA early stopping. The official WMT22 set has 1,875 Chinese sentences and English references, but should not be used for model selection. The Tatoeba test set has 469 Chinese sentences and no English references, so BLEU/chrF++/reference-based COMET cannot be computed for it.
+
+The runner needs `sacrebleu`, PyTorch, Transformers, and their model dependencies; `--comet` additionally needs `unbabel-comet`. New model downloads and inference require a suitable GPU. MADLAD and NLLB use the encoder-decoder path added to `scripts/screen_model.py`.
+
 - [ ] Keep the original files in `official/` unchanged.
 - [ ] Build development sets with seed `4248`.
 - [ ] Verify deduplication against the training set and both official test sets.
