@@ -1,0 +1,17 @@
+# Model inference and quantization
+# Pin CUDA build so pip cannot silently choose the CPU-only wheel from PyPI.
+--extra-index-url https://download.pytorch.org/whl/cu132
+torch==2.14.1+cu132
+transformers==4.56.0
+accelerate
+bitsandbytes
+sentencepiece
+protobuf
+
+# Ensemble selection and evaluation
+sacrebleu
+unbabel-comet
+
+# Only needed to rebuild the development sets
+datasets
+opencc-python-reimplemented

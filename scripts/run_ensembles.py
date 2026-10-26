@@ -8,25 +8,29 @@ import argparse
 import csv
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+from cache_paths import COMET_CACHE
 import sacrebleu
 
 ROOT = Path(__file__).resolve().parents[1]
 DEV = ROOT / "data" / "dev"
 SCREEN = ROOT / "results" / "screening"
-OUT = ROOT / "results" / "ensembles"
+MODEL_OUTPUTS = SCREEN / "ensemble"
+OUT_BASE = ROOT / "results" / "ensembles"
+TEAM_MEMBERS = ["Ming Zhe", "Theodore", "Reet", "Shri"]
 
 
 def read(path):
     return path.read_text(encoding="utf-8").splitlines()
 
 
-def valid_cache(model, dev, src):
-    raw = SCREEN / model / f"{dev}.raw.jsonl"
-    hyp = SCREEN / model / f"{dev}.hyp"
+def valid_cache(output_dir, dev, src):
+    raw = output_dir / f"{dev}.raw.jsonl"
+    hyp = output_dir / f"{dev}.hyp"
     if not raw.exists() or not hyp.exists():
         return False
     lines = read(hyp)
@@ -54,7 +58,7 @@ def choose_chrf(candidates):
 
 
 def qe_scores(dev, model_name, src, hyp, qe_model):
-    cache = OUT / "qe_cache" / model_name / f"{dev}.json"
+    cache = OUT_BASE / ".cache" / "qe_cache" / model_name / f"{dev}.json"
     digest = hashlib.sha256(json.dumps([src, hyp], ensure_ascii=False).encode("utf-8")).hexdigest()
     if cache.exists():
         record = json.loads(cache.read_text(encoding="utf-8"))
@@ -89,6 +93,8 @@ def main():
     parser.add_argument("--selector", choices=["both", "cometkiwi", "chrf"], default="both",
                         help="candidate selection method; default runs both")
     parser.add_argument("--no-generate", action="store_true", help="require all model outputs to exist")
+    parser.add_argument("--owner", choices=TEAM_MEMBERS, required=True,
+                        help="required team member folder for this experiment run")
     args = parser.parse_args()
 
     from screen_model import MODELS
@@ -111,21 +117,38 @@ def main():
 
     models = list(dict.fromkeys(m for trio in combos for m in trio))
     for model in models:
-        missing = [dev for dev in args.dev if not valid_cache(model, dev, sources[dev])]
+        output_dir = MODEL_OUTPUTS / model / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        # Migrate usable outputs from the original screening location on demand.
+        legacy_dir = SCREEN / model
+        for dev in args.dev:
+            if not valid_cache(output_dir, dev, sources[dev]) and valid_cache(legacy_dir, dev, sources[dev]):
+                shutil.copyfile(legacy_dir / f"{dev}.hyp", output_dir / f"{dev}.hyp")
+                shutil.copyfile(legacy_dir / f"{dev}.raw.jsonl", output_dir / f"{dev}.raw.jsonl")
+        missing = [dev for dev in args.dev if not valid_cache(output_dir, dev, sources[dev])]
         if missing:
             if args.no_generate:
                 parser.error(f"missing or partial outputs for {model}: {', '.join(missing)}")
             print(f"Generating {model}: {', '.join(missing)}", flush=True)
-            subprocess.run([sys.executable, str(ROOT / "scripts" / "screen_model.py"),
-                            "--model", model, "--dev", *missing, "--no-comet"], check=True)
+            result = subprocess.run([sys.executable, "-X", "faulthandler", "-u",
+                                     str(ROOT / "scripts" / "screen_model.py"),
+                                     "--model", model, "--dev", *missing, "--no-comet",
+                                     "--output-dir", str(output_dir)])
+            if result.returncode:
+                code = result.returncode & 0xFFFFFFFF
+                detail = " (Windows access violation)" if code == 0xC0000005 else ""
+                parser.exit(1, f"{model} failed with exit code 0x{code:08X}{detail}. "
+                               f"Native diagnostics: {ROOT / 'logs' / (model + '-native-crash.log')}\n")
 
+    OUT = OUT_BASE / args.owner
     OUT.mkdir(parents=True, exist_ok=True)
-    all_hyp = {dev: {m: read(SCREEN / m / f"{dev}.hyp") for m in models}
+    all_hyp = {dev: {m: read(MODEL_OUTPUTS / m / "output" / f"{dev}.hyp") for m in models}
                for dev in args.dev}
     all_qe = None
     if args.selector in ("both", "cometkiwi"):
         from comet import download_model, load_from_checkpoint
-        qe_model = load_from_checkpoint(download_model("Unbabel/wmt22-cometkiwi-da"))
+        qe_model = load_from_checkpoint(download_model("Unbabel/wmt22-cometkiwi-da",
+                                                       saving_directory=str(COMET_CACHE)))
         all_qe = {dev: {m: qe_scores(dev, m, sources[dev], all_hyp[dev][m], qe_model)
                         for m in models} for dev in args.dev}
         del qe_model
@@ -136,7 +159,8 @@ def main():
     comet_model = None
     if args.comet:
         from comet import download_model, load_from_checkpoint
-        comet_model = load_from_checkpoint(download_model("Unbabel/wmt22-comet-da"))
+        comet_model = load_from_checkpoint(download_model("Unbabel/wmt22-comet-da",
+                                                          saving_directory=str(COMET_CACHE)))
     selectors = ["cometkiwi", "chrf"] if args.selector == "both" else [args.selector]
     all_rows = []
     for selector in selectors:
@@ -151,13 +175,15 @@ def main():
                     choices = [choose_chrf([all_hyp[dev][m][j] for m in trio])
                                for j in range(len(sources[dev]))]
                 hyp = [all_hyp[dev][trio[pick]][j] for j, pick in enumerate(choices)]
-                stem = f"ensemble_{i:02d}_{selector}_{dev}"
-                (OUT / f"{stem}.hyp").write_text("\n".join(hyp) + "\n", encoding="utf-8")
+                exp_dir = OUT / f"experiment_{i:02d}"
+                exp_dir.mkdir(parents=True, exist_ok=True)
+                hyp_path = exp_dir / f"{dev}_{selector}.hyp"
+                hyp_path.write_text("\n".join(hyp) + "\n", encoding="utf-8")
                 counts = {m: choices.count(k) for k, m in enumerate(trio)}
                 row = {"experiment": i, "dev": dev, "models": " + ".join(trio),
                        "selector": selector,
                        "n": len(hyp), **score(sources[dev], refs[dev], hyp, comet_model),
-                       "selection_counts": json.dumps(counts), "hyp_file": str(OUT / f"{stem}.hyp")}
+                       "selection_counts": json.dumps(counts), "hyp_file": str(hyp_path)}
                 rows.append(row)
                 print(f"{i:02d} {dev} {selector}: {row['models']} | BLEU {row['bleu']} | chrF++ {row['chrfpp']}" +
                       (f" | COMET {row['comet22']}" if args.comet else ""), flush=True)
@@ -168,6 +194,10 @@ def main():
             writer.writeheader()
             writer.writerows(rows)
         (OUT / f"scores_{selector}.json").write_text(json.dumps(rows, indent=2), encoding="utf-8")
+        for i in range(1, len(combos) + 1):
+            exp_dir = OUT / f"experiment_{i:02d}"
+            experiment_rows = [r for r in all_rows + rows if r["experiment"] == i]
+            (exp_dir / "scores.json").write_text(json.dumps(experiment_rows, indent=2), encoding="utf-8")
         all_rows.extend(rows)
         for dev in args.dev:
             top = max((r for r in rows if r["dev"] == dev),

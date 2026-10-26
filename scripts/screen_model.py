@@ -5,6 +5,7 @@ Usage:
   python official/scripts/screen_model.py --model qwen2.5-7b --dev dev_wmt --limit 200
 """
 import argparse
+import faulthandler
 import gc
 import json
 import re
@@ -12,6 +13,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+from cache_paths import COMET_CACHE
+from checkpoint_loading import install_windows_checkpoint_reader
 import sacrebleu
 import torch
 from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer, BitsAndBytesConfig
@@ -42,6 +45,7 @@ def read(p):
 
 
 def load(cfg):
+    install_windows_checkpoint_reader()
     tok_kwargs = {"padding_side": "right" if cfg.get("seq2seq") else "left"}
     if cfg.get("src_lang"):
         tok_kwargs["src_lang"] = cfg["src_lang"]
@@ -52,10 +56,19 @@ def load(cfg):
         q = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
                                bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True)
         cls = AutoModelForSeq2SeqLM if cfg.get("seq2seq") else AutoModelForCausalLM
-        model = cls.from_pretrained(cfg["hf"], quantization_config=q, device_map="cuda")
+        # Preserve the checkpoint dtype instead of the quantizer's implicit
+        # FP16 default, which otherwise converts BF16 weights on the CPU.
+        model = cls.from_pretrained(cfg["hf"], dtype=torch.bfloat16,
+                                    quantization_config=q, device_map="cuda")
     else:
         cls = AutoModelForSeq2SeqLM if cfg.get("seq2seq") else AutoModelForCausalLM
         model = cls.from_pretrained(cfg["hf"], dtype=torch.bfloat16).to("cuda")
+    # Some translation checkpoints ship sampling defaults even though this
+    # screening pipeline uses greedy decoding. Reset them to neutral values.
+    model.generation_config.do_sample = False
+    model.generation_config.temperature = 1.0
+    model.generation_config.top_p = 1.0
+    model.generation_config.top_k = 50
     return tok, model.eval()
 
 
@@ -92,6 +105,9 @@ def translate(tok, model, cfg, src, batch_size, max_new_tokens):
         idx = order[b:b + batch_size]
         enc = tok([build_prompt(tok, cfg, src[i]) for i in idx], return_tensors="pt",
                   padding=True, add_special_tokens=bool(cfg.get("seq2seq"))).to("cuda")
+        # Hunyuan's tokenizer can return token_type_ids, which its model does
+        # not consume in generate(). Segment IDs are unnecessary for these inputs.
+        enc.pop("token_type_ids", None)
         kwargs = {"do_sample": False, "num_beams": 1, "max_new_tokens": max_new_tokens,
                   "pad_token_id": tok.pad_token_id}
         if cfg.get("tgt_lang"):
@@ -114,7 +130,8 @@ def gpu_power_limit_w():
 
 def comet22(src, hyp, ref):
     from comet import download_model, load_from_checkpoint
-    m = load_from_checkpoint(download_model("Unbabel/wmt22-comet-da"))
+    m = load_from_checkpoint(download_model("Unbabel/wmt22-comet-da",
+                                            saving_directory=str(COMET_CACHE)))
     data = [{"src": s, "mt": h, "ref": r} for s, h, r in zip(src, hyp, ref)]
     return round(100 * m.predict(data, batch_size=64, gpus=1, progress_bar=False).system_score, 2)
 
@@ -127,10 +144,28 @@ def main():
     ap.add_argument("--max-new-tokens", type=int, default=256)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--no-comet", action="store_true")
+    ap.add_argument("--output-dir", type=Path, default=None,
+                    help="directory for hypotheses/raw outputs (defaults to results/screening/<model>)")
     ap.add_argument("--rescore", action="store_true", help="re-clean saved raw outputs and re-score; no generation")
     a = ap.parse_args()
+    logs = ROOT / "logs"
+    logs.mkdir(parents=True, exist_ok=True)
+    crash_path = logs / f"{a.model}-native-crash.log"
+    # Keep this file open for the process lifetime so Windows access violations
+    # capture the Python frames leading into the failing native operation.
+    crash_log = crash_path.open("a", encoding="utf-8")
+    crash_log.write(f"\nRun {datetime.now().isoformat()} | torch={torch.__version__} "
+                    f"cuda={torch.version.cuda} | CPU={torch.backends.cpu.get_cpu_capability()} "
+                    f"threads={torch.get_num_threads()}\n")
+    crash_log.flush()
+    faulthandler.enable(file=crash_log, all_threads=True)
     cfg = MODELS[a.model]
-    out_dir = RES / a.model
+    if not torch.cuda.is_available():
+        ap.error(
+            f"CUDA is unavailable in this Python environment (installed torch: {torch.__version__}). "
+            "Install a CUDA-enabled PyTorch wheel, then verify torch.cuda.is_available() is True."
+        )
+    out_dir = a.output_dir if a.output_dir else RES / a.model
     out_dir.mkdir(parents=True, exist_ok=True)
     if a.rescore:
         return rescore(a, cfg, out_dir)
@@ -184,14 +219,16 @@ def log_row(a, cfg, dev, src, ref, hyp, run_info):
                 PROMPT if cfg.get("chat", True) else PLAIN_PROMPT),
         time=datetime.now().isoformat(timespec="seconds"),
     )
-    with open(RES / "screening.jsonl", "a", encoding="utf-8") as fh:
+    log_path = a.output_dir / "scores.jsonl" if a.output_dir else RES / "screening.jsonl"
+    with open(log_path, "a", encoding="utf-8") as fh:
         fh.write(json.dumps(row, ensure_ascii=False) + "\n")
     print(json.dumps({k: v for k, v in row.items() if k != "prompt"}, ensure_ascii=False))
 
 
 def rescore(a, cfg, out_dir):
     # Timing fields are carried over from the latest generation run of the same model and dev set.
-    log = [json.loads(l) for l in open(RES / "screening.jsonl", encoding="utf-8")]
+    log_path = a.output_dir / "scores.jsonl" if a.output_dir else RES / "screening.jsonl"
+    log = [json.loads(l) for l in open(log_path, encoding="utf-8")]
     keys = ["sent_per_s", "gen_seconds", "load_seconds", "peak_gpu_gb", "gpu_power_limit_w", "batch_size", "limit"]
     for dev in a.dev:
         recs = [json.loads(l) for l in open(out_dir / f"{dev}.raw.jsonl", encoding="utf-8")]

@@ -7,6 +7,7 @@ import json
 import re
 from pathlib import Path
 
+from cache_paths import COMET_CACHE
 import sacrebleu
 from comet import download_model, load_from_checkpoint
 
@@ -30,7 +31,8 @@ def main():
     ap.add_argument("--dev", nargs="+", default=["dev_wmt", "dev_short"])
     ap.add_argument("--worst", type=int, default=10)
     a = ap.parse_args()
-    comet = load_from_checkpoint(download_model("Unbabel/wmt22-comet-da"))
+    comet = load_from_checkpoint(download_model("Unbabel/wmt22-comet-da",
+                                                saving_directory=str(COMET_CACHE)))
     report = {}
     for dev in a.dev:
         src, ref = read(DEV / f"{dev}.zh"), read(DEV / f"{dev}.en")
