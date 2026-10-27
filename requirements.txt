@@ -11,6 +11,8 @@ protobuf
 # Ensemble selection and evaluation
 sacrebleu
 unbabel-comet
+# COMET's torchmetrics 0.10.x imports pkg_resources (removed in setuptools 82).
+setuptools==80.9.0
 
 # Only needed to rebuild the development sets
 datasets

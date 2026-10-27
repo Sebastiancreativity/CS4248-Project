@@ -30,7 +30,7 @@ MODELS = {
     "hunyuan-mt-7b": dict(hf="tencent/Hunyuan-MT-7B", four_bit=True),
     "tower-7b": dict(hf="Unbabel/TowerInstruct-7B-v0.2", four_bit=True),
     "alma-7b": dict(hf="haoranxu/ALMA-7B", four_bit=True, chat=False),
-    "madlad400-3b": dict(hf="google/madlad400-3b-mt", seq2seq=True, target_prefix="<2en> "),
+    "madlad400-3b": dict(hf="google/madlad400-3b-mt", seq2seq=True, target_prefix="<2en> ", streaming=True),
     "nllb-1.3b": dict(hf="facebook/nllb-200-distilled-1.3B", seq2seq=True, src_lang="zho_Hans", tgt_lang="eng_Latn"),
 }
 
@@ -45,14 +45,19 @@ def read(p):
 
 
 def load(cfg):
-    install_windows_checkpoint_reader()
+    if not cfg.get("streaming"):
+        install_windows_checkpoint_reader()
     tok_kwargs = {"padding_side": "right" if cfg.get("seq2seq") else "left"}
     if cfg.get("src_lang"):
         tok_kwargs["src_lang"] = cfg["src_lang"]
     tok = AutoTokenizer.from_pretrained(cfg["hf"], **tok_kwargs)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
-    if cfg.get("four_bit"):
+    if cfg.get("streaming"):
+        from streaming_loading import load_streaming_safetensors
+        cls = AutoModelForSeq2SeqLM if cfg.get("seq2seq") else AutoModelForCausalLM
+        model = load_streaming_safetensors(cfg["hf"], cls)
+    elif cfg.get("four_bit"):
         q = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
                                bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True)
         cls = AutoModelForSeq2SeqLM if cfg.get("seq2seq") else AutoModelForCausalLM

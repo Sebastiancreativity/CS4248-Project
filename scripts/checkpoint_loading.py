@@ -118,23 +118,32 @@ def install_windows_checkpoint_reader():
             header_size = int.from_bytes(handle.read(8), "little")
             header = json.loads(handle.read(header_size))
             data_start = 8 + header_size
-            for key in keys:
-                info = header[key]
-                dtype = modeling_utils.str_to_torch_dtype[info["dtype"]]
-                start, end = info["data_offsets"]
-                if start == end:
-                    tensor = torch.empty(info["shape"], dtype=dtype)
-                else:
-                    buffer = bytearray(end - start)
-                    handle.seek(data_start + start)
-                    if handle.readinto(buffer) != len(buffer):
-                        raise OSError(f"Incomplete tensor {key} in {checkpoint_file}")
-                    # frombuffer keeps its writable bytearray alive. This also
-                    # supports BF16, which NumPy's normal tensor reader does not.
-                    tensor = torch.frombuffer(buffer, dtype=dtype).reshape(info["shape"])
-                state_dict[key] = tensor
+        # Safetensors payloads are contiguous and uncompressed. Mapping them
+        # read-only avoids copying an entire large checkpoint (MADLAD is ~12GB)
+        # into Python bytearrays before the model is moved to the GPU.
+        with open(checkpoint_file, "rb") as handle:
+            mapped = mmap.mmap(handle.fileno(), 0, access=mmap.ACCESS_READ)
+        if data_start > len(mapped):
+            mapped.close()
+            raise OSError(f"Invalid Safetensors header size: {checkpoint_file}")
+        for key in keys:
+            info = header[key]
+            dtype = modeling_utils.str_to_torch_dtype[info["dtype"]]
+            start, end = info["data_offsets"]
+            if start == end:
+                tensor = torch.empty(info["shape"], dtype=dtype)
+            else:
+                if start < 0 or end < start or data_start + end > len(mapped):
+                    raise OSError(f"Incomplete tensor {key} in {checkpoint_file}")
+                # The tensor retains its memoryview, which keeps the mmap
+                # alive after this loader returns. Values remain read-only
+                # source weights until Transformers copies them to CUDA.
+                tensor = torch.frombuffer(
+                    memoryview(mapped)[data_start + start:data_start + end], dtype=dtype
+                ).reshape(info["shape"])
+            state_dict[key] = tensor
         return state_dict
 
     buffered_load._buffered_windows_reader = True
     modeling_utils.load_state_dict = buffered_load
-    print("Using Windows checkpoint reader (Safetensors buffered; .bin ZIP storage memory-mapped).", flush=True)
+    print("Using Windows checkpoint reader (Safetensors and .bin ZIP storage memory-mapped).", flush=True)

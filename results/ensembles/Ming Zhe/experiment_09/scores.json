@@ -1,0 +1,50 @@
+[
+  {
+    "experiment": 9,
+    "dev": "dev_wmt",
+    "models": "qwen2.5-1.5b + alma-7b + nllb-1.3b",
+    "selector": "cometkiwi",
+    "n": 1033,
+    "bleu": 19.75,
+    "chrfpp": 45.2,
+    "comet22": 79.69,
+    "selection_counts": "{\"qwen2.5-1.5b\": 447, \"alma-7b\": 328, \"nllb-1.3b\": 258}",
+    "hyp_file": "C:\\Users\\Ming Zhe\\Desktop\\CS4248-Projectss\\results\\ensembles\\Ming Zhe\\experiment_09\\dev_wmt_cometkiwi.hyp"
+  },
+  {
+    "experiment": 9,
+    "dev": "dev_short",
+    "models": "qwen2.5-1.5b + alma-7b + nllb-1.3b",
+    "selector": "cometkiwi",
+    "n": 992,
+    "bleu": 40.32,
+    "chrfpp": 59.49,
+    "comet22": 90.85,
+    "selection_counts": "{\"qwen2.5-1.5b\": 480, \"alma-7b\": 290, \"nllb-1.3b\": 222}",
+    "hyp_file": "C:\\Users\\Ming Zhe\\Desktop\\CS4248-Projectss\\results\\ensembles\\Ming Zhe\\experiment_09\\dev_short_cometkiwi.hyp"
+  },
+  {
+    "experiment": 9,
+    "dev": "dev_wmt",
+    "models": "qwen2.5-1.5b + alma-7b + nllb-1.3b",
+    "selector": "chrf",
+    "n": 1033,
+    "bleu": 21.25,
+    "chrfpp": 46.83,
+    "comet22": 78.32,
+    "selection_counts": "{\"qwen2.5-1.5b\": 262, \"alma-7b\": 478, \"nllb-1.3b\": 293}",
+    "hyp_file": "C:\\Users\\Ming Zhe\\Desktop\\CS4248-Projectss\\results\\ensembles\\Ming Zhe\\experiment_09\\dev_wmt_chrf.hyp"
+  },
+  {
+    "experiment": 9,
+    "dev": "dev_short",
+    "models": "qwen2.5-1.5b + alma-7b + nllb-1.3b",
+    "selector": "chrf",
+    "n": 992,
+    "bleu": 41.19,
+    "chrfpp": 59.89,
+    "comet22": 90.31,
+    "selection_counts": "{\"qwen2.5-1.5b\": 524, \"alma-7b\": 287, \"nllb-1.3b\": 181}",
+    "hyp_file": "C:\\Users\\Ming Zhe\\Desktop\\CS4248-Projectss\\results\\ensembles\\Ming Zhe\\experiment_09\\dev_short_chrf.hyp"
+  }
+]

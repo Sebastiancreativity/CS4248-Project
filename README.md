@@ -115,7 +115,9 @@ The runner generates missing model outputs once per model and development set un
 
 The runner needs `sacrebleu`, PyTorch, Transformers, and their model dependencies; `--comet` additionally needs `unbabel-comet`. New model downloads and inference require a suitable GPU. MADLAD and NLLB use the encoder-decoder path added to `scripts/screen_model.py`.
 
-On Windows, the model loader reads Safetensors shards through owned memory buffers. For uncompressed PyTorch `.bin` shards (including ALMA), it maps the checkpoint read-only and uses PyTorch's restricted weights-only decoder, avoiding a RAM copy of each shard. These paths bypass the native file readers that produced access violations on this machine. Native crash traces are saved to `logs/<model>-native-crash.log`. Runs using a custom `--output-dir` keep their metrics in that directory's `scores.jsonl`.
+MADLAD loads through `scripts/streaming_loading.py`: an empty model is created first, then its checkpoint is read in 16 MiB chunks and copied directly to CUDA. Weights are converted to BF16 on the GPU. This avoids staging the entire FP32 checkpoint in RAM and bypasses Transformers' crashing native Safetensors slicing path on Windows. The complete BF16 model still needs to fit in GPU memory during inference; loading chunks does not change model precision or quantize the weights.
+
+On Windows, the model loader maps Safetensors shards read-only. For uncompressed PyTorch `.bin` shards (including ALMA), it maps the checkpoint read-only and uses PyTorch's restricted weights-only decoder, avoiding a RAM copy of each shard. Native crash traces are saved to `logs/<model>-native-crash.log`. Runs using a custom `--output-dir` keep their metrics in that directory's `scores.jsonl`. Large checkpoint loads may also need a larger Windows paging file, depending on available system commit.
 
 - [ ] Keep the original files in `official/` unchanged.
 - [ ] Build development sets with seed `4248`.

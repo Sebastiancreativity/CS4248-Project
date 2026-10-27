@@ -1,0 +1,59 @@
+
+Run 2026-10-26T23:54:24.245816 | torch=2.14.1+cu132 cuda=13.2 | CPU=AVX2 threads=10
+Windows fatal exception: access violation
+
+Thread 0x00007be0 (most recent call first):
+  File "E:\Not frequently used\Python\Lib\threading.py", line 359 in wait
+  File "E:\Not frequently used\Python\Lib\threading.py", line 655 in wait
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\tqdm\_monitor.py", line 69 in run
+  File "E:\Not frequently used\Python\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "E:\Not frequently used\Python\Lib\threading.py", line 1032 in _bootstrap
+
+Current thread 0x0000459c (most recent call first):
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\torch\storage.py", line 480 in __getitem__
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 813 in _load_state_dict_into_meta_model
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\torch\utils\_contextlib.py", line 124 in decorate_context
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 946 in load_shard_file
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 5639 in _load_pretrained_model
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 5176 in from_pretrained
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 288 in _wrapper
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\models\auto\auto_factory.py", line 604 in from_pretrained
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\scripts\screen_model.py", line 65 in load
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\scripts\screen_model.py", line 176 in main
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\scripts\screen_model.py", line 244 in <module>
+
+Run 2026-10-27T00:06:53.270756 | torch=2.14.1+cu132 cuda=13.2 | CPU=AVX2 threads=10
+Windows fatal exception: access violation
+
+Current thread 0x000024d8 (most recent call first):
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\torch\storage.py", line 480 in __getitem__
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 813 in _load_state_dict_into_meta_model
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\torch\utils\_contextlib.py", line 124 in decorate_context
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 946 in load_shard_file
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 5639 in _load_pretrained_model
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 5176 in from_pretrained
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 288 in _wrapper
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\models\auto\auto_factory.py", line 604 in from_pretrained
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\scripts\screen_model.py", line 65 in load
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\scripts\screen_model.py", line 176 in main
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\scripts\screen_model.py", line 244 in <module>
+
+Run 2026-10-27T11:33:27.664060 | torch=2.14.1+cu132 cuda=13.2 | CPU=AVX2 threads=10
+Windows fatal exception: access violation
+
+Current thread 0x00005008 (most recent call first):
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\torch\storage.py", line 480 in __getitem__
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 813 in _load_state_dict_into_meta_model
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\torch\utils\_contextlib.py", line 124 in decorate_context
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 946 in load_shard_file
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 5639 in _load_pretrained_model
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 5176 in from_pretrained
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\modeling_utils.py", line 288 in _wrapper
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\.venv\Lib\site-packages\transformers\models\auto\auto_factory.py", line 604 in from_pretrained
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\scripts\screen_model.py", line 65 in load
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\scripts\screen_model.py", line 176 in main
+  File "C:\Users\Ming Zhe\Desktop\CS4248-Projectss\scripts\screen_model.py", line 244 in <module>
+
+Run 2026-10-27T11:56:08.513772 | torch=2.14.1+cu132 cuda=13.2 | CPU=AVX2 threads=10
+
+Run 2026-10-27T13:03:04.082521 | torch=2.14.1+cu132 cuda=13.2 | CPU=AVX2 threads=10
