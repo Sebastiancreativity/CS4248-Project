@@ -1,12 +1,12 @@
 [
-  ["qwen2.5-1.5b", "hunyuan-mt-7b", "tower-7b"],
-  ["qwen2.5-1.5b", "hunyuan-mt-7b", "alma-7b"],
-  ["qwen2.5-1.5b", "hunyuan-mt-7b", "madlad400-3b"],
-  ["qwen2.5-1.5b", "hunyuan-mt-7b", "nllb-1.3b"],
-  ["qwen2.5-1.5b", "tower-7b", "alma-7b"],
-  ["qwen2.5-1.5b", "tower-7b", "madlad400-3b"],
-  ["qwen2.5-1.5b", "tower-7b", "nllb-1.3b"],
-  ["qwen2.5-1.5b", "alma-7b", "madlad400-3b"],
-  ["qwen2.5-1.5b", "alma-7b", "nllb-1.3b"],
-  ["qwen2.5-1.5b", "madlad400-3b", "nllb-1.3b"]
+  ["qwen2.5-7b", "hunyuan-mt-7b", "tower-7b"],
+  ["qwen2.5-7b", "hunyuan-mt-7b", "alma-7b"],
+  ["qwen2.5-7b", "hunyuan-mt-7b", "madlad400-3b"],
+  ["qwen2.5-7b", "hunyuan-mt-7b", "nllb-1.3b"],
+  ["qwen2.5-7b", "tower-7b", "alma-7b"],
+  ["qwen2.5-7b", "tower-7b", "madlad400-3b"],
+  ["qwen2.5-7b", "tower-7b", "nllb-1.3b"],
+  ["qwen2.5-7b", "alma-7b", "madlad400-3b"],
+  ["qwen2.5-7b", "alma-7b", "nllb-1.3b"],
+  ["qwen2.5-7b", "madlad400-3b", "nllb-1.3b"]
 ]

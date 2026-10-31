@@ -1,0 +1,2 @@
+# Slurm/Bash scripts must retain Unix line endings when copied from Windows.
+*.slurm text eol=lf

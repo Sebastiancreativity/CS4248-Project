@@ -103,10 +103,13 @@ Install the Python dependencies first with `python requirements.py` (or `python 
 
 Model downloads go to `E:\huggingface` by default: Hugging Face weights under `hub/` and COMET checkpoints under `comet/`. The scripts create these folders. To use another drive, set `CS4248_MODEL_CACHE` before starting Python, for example `$env:CS4248_MODEL_CACHE = 'D:\model-cache'` in PowerShell. Existing model files in an old cache are not moved automatically.
 
-Edit `combinations.json`: it is an array of three-model arrays, with ten examples ready to run. Model names must match the keys in `scripts/screen_model.py`. Choose a team member explicitly when you run it. For Ming Zhe:
+`combinations.json` currently contains Member 3's ten assigned ensembles: Qwen2.5-7B
+plus every pair from Hunyuan, Tower, ALMA, MADLAD, and NLLB, in assignment order.
+Model names must match the keys in `scripts/screen_model.py`. Choose a team member
+explicitly when you run it. For P Shricharan, with all four quality metrics:
 
 ```bash
-python scripts/run_ensembles.py --combinations combinations.json --owner "Ming Zhe" --comet
+python scripts/run_ensembles.py --combinations combinations.json --owner "P Shricharan" --comet --bertscore
 ```
 
 The runner generates missing model outputs once per model and development set under `results/screening/ensemble/<model>/output/`, then reuses the saved hypotheses for every combination. It can migrate valid outputs from the original `results/screening/<model>/` location. By default, it runs both selection methods on the same candidates: reference-free COMETKiwi quality estimation (Chinese source plus English candidate) and pairwise chrF++ agreement. COMETKiwi scores are cached by model and development set. Use `--selector cometkiwi` or `--selector chrf` to run just one method. It reports reference-based BLEU, chrF++ and, with `--comet`, COMET. Each `results/ensembles/<member>/experiment_XX/` folder contains the selected hypotheses for each method and development set, plus `scores.json`. Member folders are Ming Zhe, Theodore, Reet, and Shri; select one with required `--owner`. Per-member summary CSV and JSON files are also written. Use `--no-generate` to score only existing model outputs, or `--dev dev_wmt` to run only one development set. COMETKiwi may require accepting its model license on Hugging Face before first download.
@@ -114,6 +117,136 @@ The runner generates missing model outputs once per model and development set un
 `dev_wmt` (1,033 referenced news/user-review sentences) and `dev_short` (992 referenced short sentences) are for model and ensemble selection. `dev_alma` (1,002 referenced sentences) is reserved for LoRA early stopping. The official WMT22 set has 1,875 Chinese sentences and English references, but should not be used for model selection. The Tatoeba test set has 469 Chinese sentences and no English references, so BLEU/chrF++/reference-based COMET cannot be computed for it.
 
 The runner needs `sacrebleu`, PyTorch, Transformers, and their model dependencies; `--comet` additionally needs `unbabel-comet`. New model downloads and inference require a suitable GPU. MADLAD and NLLB use the encoder-decoder path added to `scripts/screen_model.py`.
+
+### BERTScore translation-quality evaluation
+
+BERTScore is an optional fourth quality metric alongside BLEU, chrF++, and COMET.
+It compares each English hypothesis with its English reference. The pretrained
+encoder generates contextual token embeddings at scoring time; no embedding
+dataset, paid embedding API, or training is needed. The default encoder is
+[`microsoft/deberta-large-mnli`](https://huggingface.co/microsoft/deberta-large-mnli),
+one of the [BERTScore authors' recommended models](https://github.com/Tiiiger/bert_score).
+Weights download automatically to the project's Hugging Face cache on first use.
+
+Install the additional package in your existing project Python environment:
+
+```powershell
+python -m pip install bert-score==0.3.13
+```
+
+Append `--bertscore` to screening, rescoring, or ensemble commands:
+
+```powershell
+python scripts/screen_model.py --model qwen2.5-1.5b --rescore --bertscore
+python scripts/run_ensembles.py --owner "P Shricharan" --no-generate --comet --bertscore
+```
+
+For a saved translation file, score it directly without loading translation
+models, rerunning ensemble selection, or changing existing results:
+
+```powershell
+python scripts/bertscore_metric.py --hyp results/screening/qwen2.5-1.5b/dev_wmt.hyp --ref data/dev/dev_wmt.en --output results/screening/qwen2.5-1.5b/dev_wmt.bertscore.json
+```
+
+If the default `E:\huggingface` cache is unavailable, set
+`$env:CS4248_MODEL_CACHE = "$PWD/.model-cache"` before running Python (keep model
+downloads out of version control). BERTScore defaults to CPU to avoid competing
+with COMET for GPU memory. Use `--bertscore-device cuda` for GPU scoring and
+`--bertscore-batch-size 8` to reduce its batch size when needed. The standalone
+command supports CPU-only machines. `--bertscore-model roberta-large` selects
+the library's standard English encoder instead; use the same encoder for all
+systems in a comparison.
+
+Score records include `bertscore_precision`, `bertscore_recall`,
+`bertscore_f1`, and `bertscore_hash`. Each numeric value is the mean of the
+sentence-level scores multiplied by 100; use F1 as the headline BERTScore.
+The implementation uses raw scores (no baseline rescaling), no IDF weighting,
+and the slow tokenizer. The hash records the encoder/layer and library settings.
+Higher is better, but these are similarity scores, not percentages of correct
+translations. Empty hypotheses remain in the average; empty references or
+mismatched line counts are rejected. Like BLEU and chrF++, this requires
+references and cannot evaluate the unreferenced Tatoeba test set. It is used
+only after ensemble selection, so references do not influence candidate choices.
+
+### Member 3: run on the SoC GPU cluster
+
+Copy this updated MT checkout (including the new scripts and requirements file)
+to the cluster. Do not download model weights on the laptop. Enable cluster
+access first, then SSH to `shri@xlogin.comp.nus.edu.sg` using your SoC
+account; follow the SoC jump-host instructions when off campus.
+
+Create a separate project directory on xlogin. The runtime directory holds the
+Python environment and model downloads outside the source checkout:
+
+```bash
+mkdir -p "$HOME/cs4248-mt" "$HOME/cs4248-mt-runtime"
+cd "$HOME/cs4248-mt"
+quota -s
+df -h "$HOME"
+sinfo -o "%P %G %l"
+```
+
+Transfer an up-to-date MT checkout into `~/cs4248-mt` before submission.
+After checking the partition and quota:
+
+```bash
+cd "$HOME/cs4248-mt"
+export CS4248_CLUSTER_DIR="$HOME/cs4248-mt-runtime"
+sbatch scripts/run_member3.slurm
+```
+
+The runtime path is also the script's default. Override `CS4248_CLUSTER_DIR`
+with a larger shared storage allocation if home quota is insufficient. `df`
+shows filesystem capacity, not your personal quota; if `quota -s` is unavailable
+or inconclusive, check the site's storage quota before downloading models.
+
+The storage directory must be writable from compute nodes and have sufficient
+quota for six translation checkpoints, COMET, COMETKiwi, BERTScore, and the
+Python environment. Four-bit inference still downloads the full source
+checkpoints. Use a persistent shared directory so subsequent jobs reuse downloads.
+
+The script requests one `a100-40` GPU, 8 CPUs, 64 GB RAM, and 24 hours, using
+GPU naming from the [SoC GPU guide](https://www.comp.nus.edu.sg/~cs3210/student-guide/soc-gpus/).
+The default partition is `gpu-long`, confirmed in the user's cluster listing
+on 2026-10-30; it offers A100 40 GB GPUs with a three-day maximum time limit.
+Confirm availability and limits with `sinfo`; override partition, GPU, and time
+using `sbatch` options when needed. 24 hours is a scheduling default, not a
+runtime estimate: the first run includes package installation and downloads.
+For a longer run, use a partition and time limit your account permits. On a
+retry, completed per-model/per-dev translations and valid QE caches are reused;
+an interrupted generation for a development set starts again.
+
+Use Python 3.10-3.12 (load a site Python module before submission if necessary).
+The job creates its environment and installs `requirements-cluster.txt` on
+cluster storage. This uses the [official CUDA 12.6 PyTorch build](https://pytorch.org/get-started/previous-versions/)
+instead of the laptop's CUDA 13.2 pin. A GPU check runs before model loading.
+Downloads require network access from the allocated node. If COMETKiwi requests
+license acceptance, accept its Hugging Face terms and authenticate on the cluster
+using the same account before retrying; never put tokens in this repository.
+
+For a COMETKiwi `401` / `GatedRepoError`, first accept access conditions on
+[the model page](https://huggingface.co/Unbabel/wmt22-cometkiwi-da). Then log in
+with a Read token from that same account, using the job's cache directory so
+the batch job can find the saved credentials:
+
+```bash
+export CS4248_CLUSTER_DIR="$HOME/cs4248-mt-runtime"
+export HF_HOME="$CS4248_CLUSTER_DIR/models"
+export HF_HUB_CACHE="$HF_HOME/hub"
+source "$CS4248_CLUSTER_DIR/venv/bin/activate"
+python -c "from huggingface_hub import login; login()"
+```
+
+Paste the token at the interactive terminal prompt, not into source code.
+The environment above exists after the job's initial setup. Retry the Slurm
+job after access is confirmed; valid saved translations will be reused.
+
+Both selectors (`cometkiwi` and `chrf`) run on `dev_wmt` and `dev_short`: ten
+ensembles produce 40 evaluation rows, each with BLEU, chrF++, COMET-22, and
+BERTScore P/R/F1. BERTScore runs on CUDA in this job. Results are saved under
+`results/ensembles/P Shricharan/`, including `scores_comparison.csv`; logs are
+`slurm-member3-<job-id>.log`, with package versions in `logs/`.
+Monitor using `squeue -u "$USER"` and `tail -f slurm-member3-<job-id>.log`.
 
 MADLAD loads through `scripts/streaming_loading.py`: an empty model is created first, then its checkpoint is read in 16 MiB chunks and copied directly to CUDA. Weights are converted to BF16 on the GPU. This avoids staging the entire FP32 checkpoint in RAM and bypasses Transformers' crashing native Safetensors slicing path on Windows. The complete BF16 model still needs to fit in GPU memory during inference; loading chunks does not change model precision or quantize the weights.
 

@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 from cache_paths import COMET_CACHE
+from bertscore_metric import add_arguments as add_bertscore_arguments, from_args as bertscore_from_args
 from checkpoint_loading import install_windows_checkpoint_reader
 import sacrebleu
 import torch
@@ -127,10 +128,20 @@ def translate(tok, model, cfg, src, batch_size, max_new_tokens):
 
 
 def gpu_power_limit_w():
+    import os
     import subprocess
-    out = subprocess.run(["nvidia-smi", "--query-gpu=enforced.power.limit", "--format=csv,noheader,nounits"],
-                         capture_output=True, text=True).stdout.strip()
-    return float(out) if out else None
+    command = ["nvidia-smi", "--query-gpu=enforced.power.limit", "--format=csv,noheader,nounits"]
+    # Slurm may expose one GPU while nvidia-smi lists the entire node. Prefer
+    # the CUDA device UUID, falling back to the scheduler's device identifier.
+    gpu_id = getattr(torch.cuda.get_device_properties(0), "uuid", None)
+    gpu_id = str(gpu_id) if gpu_id else os.environ.get("CUDA_VISIBLE_DEVICES", "0").split(",")[0]
+    command.append(f"--id={gpu_id}")
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+        return float(result.stdout.strip()) if result.returncode == 0 else None
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        # MIG devices or cluster policy may hide power telemetry.
+        return None
 
 
 def comet22(src, hyp, ref):
@@ -149,10 +160,12 @@ def main():
     ap.add_argument("--max-new-tokens", type=int, default=256)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--no-comet", action="store_true")
+    add_bertscore_arguments(ap)
     ap.add_argument("--output-dir", type=Path, default=None,
                     help="directory for hypotheses/raw outputs (defaults to results/screening/<model>)")
     ap.add_argument("--rescore", action="store_true", help="re-clean saved raw outputs and re-score; no generation")
     a = ap.parse_args()
+    a.bertscore_scorer = bertscore_from_args(a)
     logs = ROOT / "logs"
     logs.mkdir(parents=True, exist_ok=True)
     crash_path = logs / f"{a.model}-native-crash.log"
@@ -225,6 +238,8 @@ def log_row(a, cfg, dev, src, ref, hyp, run_info):
         time=datetime.now().isoformat(timespec="seconds"),
     )
     log_path = a.output_dir / "scores.jsonl" if a.output_dir else RES / "screening.jsonl"
+    if a.bertscore_scorer is not None:
+        row.update(a.bertscore_scorer.score(hyp, ref))
     with open(log_path, "a", encoding="utf-8") as fh:
         fh.write(json.dumps(row, ensure_ascii=False) + "\n")
     print(json.dumps({k: v for k, v in row.items() if k != "prompt"}, ensure_ascii=False))

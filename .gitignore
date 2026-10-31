@@ -1,3 +1,4 @@
 .venv
+.model-cache/
 /results/screening/ensemble/
 /results/ensembles/.cache

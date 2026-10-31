@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 
 from cache_paths import COMET_CACHE
+from bertscore_metric import add_arguments as add_bertscore_arguments, from_args as bertscore_from_args
 import sacrebleu
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,7 +22,7 @@ DEV = ROOT / "data" / "dev"
 SCREEN = ROOT / "results" / "screening"
 MODEL_OUTPUTS = SCREEN / "ensemble"
 OUT_BASE = ROOT / "results" / "ensembles"
-TEAM_MEMBERS = ["Ming Zhe", "Theodore", "Reet", "Shri"]
+TEAM_MEMBERS = ["Ming Zhe", "Theodore", "Reet", "Shri", "P Shricharan"]
 
 
 def read(path):
@@ -72,7 +73,7 @@ def qe_scores(dev, model_name, src, hyp, qe_model):
     return scores
 
 
-def score(src, ref, hyp, comet_model):
+def score(src, ref, hyp, comet_model, bertscore_scorer=None):
     metrics = {
         "bleu": round(sacrebleu.corpus_bleu(hyp, [ref], tokenize="13a").score, 2),
         "chrfpp": round(sacrebleu.corpus_chrf(hyp, [ref], word_order=2).score, 2),
@@ -81,6 +82,8 @@ def score(src, ref, hyp, comet_model):
         data = [{"src": s, "mt": h, "ref": r} for s, h, r in zip(src, hyp, ref)]
         metrics["comet22"] = round(100 * comet_model.predict(data, batch_size=64, gpus=1,
                                                                progress_bar=False).system_score, 2)
+    if bertscore_scorer is not None:
+        metrics.update(bertscore_scorer.score(hyp, ref))
     return metrics
 
 
@@ -90,12 +93,14 @@ def main():
     parser.add_argument("--dev", nargs="+", choices=["dev_wmt", "dev_short"],
                         default=["dev_wmt", "dev_short"])
     parser.add_argument("--comet", action="store_true", help="also score with reference-based COMET")
+    add_bertscore_arguments(parser)
     parser.add_argument("--selector", choices=["both", "cometkiwi", "chrf"], default="both",
                         help="candidate selection method; default runs both")
     parser.add_argument("--no-generate", action="store_true", help="require all model outputs to exist")
     parser.add_argument("--owner", choices=TEAM_MEMBERS, required=True,
                         help="required team member folder for this experiment run")
     args = parser.parse_args()
+    bertscore_scorer = bertscore_from_args(args)
 
     from screen_model import MODELS
     combos = json.loads(args.combinations.read_text(encoding="utf-8"))
@@ -182,11 +187,12 @@ def main():
                 counts = {m: choices.count(k) for k, m in enumerate(trio)}
                 row = {"experiment": i, "dev": dev, "models": " + ".join(trio),
                        "selector": selector,
-                       "n": len(hyp), **score(sources[dev], refs[dev], hyp, comet_model),
+                       "n": len(hyp), **score(sources[dev], refs[dev], hyp, comet_model, bertscore_scorer),
                        "selection_counts": json.dumps(counts), "hyp_file": str(hyp_path)}
                 rows.append(row)
                 print(f"{i:02d} {dev} {selector}: {row['models']} | BLEU {row['bleu']} | chrF++ {row['chrfpp']}" +
-                      (f" | COMET {row['comet22']}" if args.comet else ""), flush=True)
+                      (f" | COMET {row['comet22']}" if args.comet else "") +
+                      (f" | BERTScore F1 {row['bertscore_f1']}" if args.bertscore else ""), flush=True)
 
         columns = list(rows[0])
         with (OUT / f"scores_{selector}.csv").open("w", encoding="utf-8", newline="") as handle:

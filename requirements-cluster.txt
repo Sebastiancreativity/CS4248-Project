@@ -1,0 +1,13 @@
+# Linux GPU environment: same PyTorch version, CUDA 12.6 instead of 13.2.
+# Install only on the cluster, via scripts/run_member3.slurm.
+--extra-index-url https://download.pytorch.org/whl/cu126
+torch==2.14.1+cu126
+transformers==4.56.0
+accelerate
+bitsandbytes
+sentencepiece
+protobuf
+sacrebleu
+unbabel-comet
+bert-score==0.3.13
+setuptools==80.9.0
