@@ -38,7 +38,13 @@ MODELS = {
 PROMPT = "Translate the following Chinese text into English. Output only the English translation.\n\nChinese: {src}"
 PLAIN_PROMPT = "Translate this from Chinese into English:\nChinese: {src}\nEnglish:"
 CJK = re.compile(r"[一-鿿]")
-PREFIX = re.compile(r"^((here\s*(is|'s)\s*)?(the\s*)?(english\s*)?(translation|english)|英文|译文)\s*[:：]\s*", re.I)
+PREFIX = re.compile(
+    r"^(?:(?:sure|certainly|of course)[,!\.]\s*)?"
+    r"(?:(?:here\s*(?:is|['’]s)\s*)?(?:the\s+|a\s+(?:possible\s+)?)?"
+    r"(?:english\s+translation|translation(?:\s+(?:in|into|to)\s+english)?|english)"
+    r"(?:\s+is)?|英文(?:翻译)?|译文)\s*[:：]\s*",
+    re.I,
+)
 
 
 def read(p):
@@ -88,6 +94,8 @@ def build_prompt(tok, cfg, src):
 
 
 def clean(raw, src):
+    # Drop recognized introduction-only lines before selecting the translation.
+    # For example, Tower emits "Translation in English:\n<translation>".
     lines = [PREFIX.sub("", l.strip()) for l in raw.strip().split("\n")]
     lines = [l for l in lines if l]
     out = lines[0] if lines else ""
