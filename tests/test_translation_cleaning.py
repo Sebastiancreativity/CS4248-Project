@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from screen_model import clean
+from translation_cleaning import clean
 
 
 class TranslationCleaningTests(unittest.TestCase):

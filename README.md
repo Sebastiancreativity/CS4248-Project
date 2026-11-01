@@ -170,6 +170,9 @@ only after ensemble selection, so references do not influence candidate choices.
 
 ### Member 3: run on the SoC GPU cluster
 
+For all 56 triples with chrF++/BERTScore selection plus the Member 4 original
+experiments in one job, see [the combined suite instructions](CLUSTER_SUITE.md).
+
 Copy this updated MT checkout (including the new scripts and requirements file)
 to the cluster. Do not download model weights on the laptop. Enable cluster
 access first, then SSH to `shri@xlogin.comp.nus.edu.sg` using your SoC

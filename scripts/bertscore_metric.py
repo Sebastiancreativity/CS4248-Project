@@ -40,6 +40,17 @@ class EnglishBERTScore:
             raise ValueError("BERTScore requires at least one hypothesis/reference pair")
         if any(not text.strip() for text in ref):
             raise ValueError("BERTScore requires a nonempty reference for every hypothesis")
+        scorer = self.get_scorer()
+        # Keep empty hypotheses in the average: failed translations must count.
+        p, r, f1 = scorer.score(hyp, ref, batch_size=self.batch_size)
+        return {
+            "bertscore_precision": round(100 * p.mean().item(), 2),
+            "bertscore_recall": round(100 * r.mean().item(), 2),
+            "bertscore_f1": round(100 * f1.mean().item(), 2),
+            "bertscore_hash": scorer.hash,
+        }
+
+    def get_scorer(self):
         if self._scorer is None:
             # Configure the project's download cache before Hugging Face imports.
             import cache_paths  # noqa: F401
@@ -51,14 +62,20 @@ class EnglishBERTScore:
                 model_type=self.model, lang="en", device=self.device,
                 idf=False, rescale_with_baseline=False, use_fast_tokenizer=False,
             )
-        # Keep empty hypotheses in the average: failed translations must count.
-        p, r, f1 = self._scorer.score(hyp, ref, batch_size=self.batch_size)
-        return {
-            "bertscore_precision": round(100 * p.mean().item(), 2),
-            "bertscore_recall": round(100 * r.mean().item(), 2),
-            "bertscore_f1": round(100 * f1.mean().item(), 2),
-            "bertscore_hash": self._scorer.hash,
-        }
+        return self._scorer
+
+    def pair_f1(self, candidates, peers):
+        """Sentence F1 against peer outputs; no gold references enter selection."""
+        if len(candidates) != len(peers):
+            raise ValueError("Pairwise input lengths differ")
+        scores = [0.0] * len(candidates)
+        valid = [i for i, (a, b) in enumerate(zip(candidates, peers)) if a.strip() and b.strip()]
+        if valid:
+            _, _, f1 = self.get_scorer().score(
+                [candidates[i] for i in valid], [peers[i] for i in valid], batch_size=self.batch_size)
+            for i, value in zip(valid, f1.tolist()):
+                scores[i] = float(value)
+        return scores
 
 
 def main():

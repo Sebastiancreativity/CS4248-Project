@@ -12,9 +12,13 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from itertools import permutations
+from importlib.metadata import version
+from ensemble_cache import cached_pair, choose_bert, digest, save
+from translation_cleaning import clean
 
 from cache_paths import COMET_CACHE
-from bertscore_metric import add_arguments as add_bertscore_arguments, from_args as bertscore_from_args
+from bertscore_metric import EnglishBERTScore, add_arguments as add_bertscore_arguments, from_args as bertscore_from_args
 import sacrebleu
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -94,12 +98,15 @@ def main():
                         default=["dev_wmt", "dev_short"])
     parser.add_argument("--comet", action="store_true", help="also score with reference-based COMET")
     add_bertscore_arguments(parser)
-    parser.add_argument("--selector", choices=["both", "cometkiwi", "chrf"], default="both",
+    parser.add_argument("--selector", choices=["both", "cometkiwi", "chrf", "bertscore", "agreement"], default="both",
                         help="candidate selection method; default runs both")
     parser.add_argument("--no-generate", action="store_true", help="require all model outputs to exist")
+    parser.add_argument("--run-name", default=None, help="separate result subfolder under owner")
     parser.add_argument("--owner", choices=TEAM_MEMBERS, required=True,
                         help="required team member folder for this experiment run")
     args = parser.parse_args()
+    if args.run_name and (Path(args.run_name).name != args.run_name or args.run_name in ('.', '..') or '/' in args.run_name or '\\' in args.run_name):
+        parser.error('--run-name must be a single folder name')
     bertscore_scorer = bertscore_from_args(args)
 
     from screen_model import MODELS
@@ -145,11 +152,31 @@ def main():
                 parser.exit(1, f"{model} failed with exit code 0x{code:08X}{detail}. "
                                f"Native diagnostics: {ROOT / 'logs' / (model + '-native-crash.log')}\n")
 
+    # Re-clean raw cached generations after upstream cleaning fixes. This never
+    # changes generation settings, and ensures every selector sees identical text.
+    for model in models:
+        for dev in args.dev:
+            output_dir = MODEL_OUTPUTS / model / 'output'
+            records = [json.loads(line) for line in read(output_dir / f'{dev}.raw.jsonl')]
+            hyp = [clean(r['raw'], r['src']) for r in records]
+            (output_dir / f'{dev}.hyp').write_text('\n'.join(hyp) + '\n', encoding='utf-8')
     OUT = OUT_BASE / args.owner
+    if args.run_name:
+        OUT = OUT / args.run_name
     OUT.mkdir(parents=True, exist_ok=True)
     all_hyp = {dev: {m: read(MODEL_OUTPUTS / m / "output" / f"{dev}.hyp") for m in models}
                for dev in args.dev}
     all_qe = None
+    all_pairs = {}
+    if args.selector in ('bertscore', 'agreement'):
+        pair_scorer = bertscore_scorer or EnglishBERTScore(args.bertscore_model, args.bertscore_device, args.bertscore_batch_size)
+        needed = sorted({pair for trio in combos for pair in permutations(trio, 2)})
+        for dev in args.dev:
+            all_pairs[dev] = {}
+            for a, b in needed:
+                print(f'BERTScore agreement: {dev} {a} -> {b}', flush=True)
+                path = OUT_BASE / '.cache' / 'bert_pairs' / dev / f'{a}--{b}.json'
+                all_pairs[dev][(a,b)] = cached_pair(path, all_hyp[dev][a], all_hyp[dev][b], pair_scorer)
     if args.selector in ("both", "cometkiwi"):
         from comet import download_model, load_from_checkpoint
         qe_model = load_from_checkpoint(download_model("Unbabel/wmt22-cometkiwi-da",
@@ -166,7 +193,12 @@ def main():
         from comet import download_model, load_from_checkpoint
         comet_model = load_from_checkpoint(download_model("Unbabel/wmt22-comet-da",
                                                           saving_directory=str(COMET_CACHE)))
-    selectors = ["cometkiwi", "chrf"] if args.selector == "both" else [args.selector]
+    selectors = {'both': ['cometkiwi', 'chrf'], 'agreement': ['chrf', 'bertscore']}.get(args.selector, [args.selector])
+    fingerprint = digest([
+        {name: (ROOT / 'scripts' / name).read_text(encoding='utf-8') for name in
+         ['run_ensembles.py', 'ensemble_cache.py', 'bertscore_metric.py', 'translation_cleaning.py']},
+        {name: version(name) for name in ['torch', 'transformers', 'sacrebleu', 'bert-score', 'unbabel-comet']},
+        args.comet, args.bertscore, args.bertscore_model, args.bertscore_device, args.bertscore_batch_size])
     all_rows = []
     for selector in selectors:
         rows = []
@@ -176,6 +208,8 @@ def main():
                     choices = [max(range(3), key=lambda k: all_qe[dev][trio[k]][j]
                                    if all_hyp[dev][trio[k]][j] else float("-inf"))
                                for j in range(len(sources[dev]))]
+                elif selector == 'bertscore':
+                    choices = choose_bert(trio, all_hyp[dev], all_pairs[dev])
                 else:
                     choices = [choose_chrf([all_hyp[dev][m][j] for m in trio])
                                for j in range(len(sources[dev]))]
@@ -185,11 +219,19 @@ def main():
                 hyp_path = exp_dir / f"{dev}_{selector}.hyp"
                 hyp_path.write_text("\n".join(hyp) + "\n", encoding="utf-8")
                 counts = {m: choices.count(k) for k, m in enumerate(trio)}
+                checkpoint = exp_dir / f'{dev}_{selector}.checkpoint.json'
+                key = digest([fingerprint, i, trio, dev, selector, sources[dev], refs[dev], hyp, counts])
+                previous = json.loads(checkpoint.read_text(encoding='utf-8')) if checkpoint.exists() else {}
+                if previous.get('digest') == key:
+                    rows.append(previous['row'])
+                    print(f'Reused completed evaluation: {i:02d} {dev} {selector}', flush=True)
+                    continue
                 row = {"experiment": i, "dev": dev, "models": " + ".join(trio),
                        "selector": selector,
                        "n": len(hyp), **score(sources[dev], refs[dev], hyp, comet_model, bertscore_scorer),
                        "selection_counts": json.dumps(counts), "hyp_file": str(hyp_path)}
                 rows.append(row)
+                save(checkpoint, {'digest': key, 'row': row})
                 print(f"{i:02d} {dev} {selector}: {row['models']} | BLEU {row['bleu']} | chrF++ {row['chrfpp']}" +
                       (f" | COMET {row['comet22']}" if args.comet else "") +
                       (f" | BERTScore F1 {row['bertscore_f1']}" if args.bertscore else ""), flush=True)
@@ -209,7 +251,7 @@ def main():
             top = max((r for r in rows if r["dev"] == dev),
                       key=lambda r: r.get("comet22", r["chrfpp"]))
             print(f"Best {selector} on {dev}: experiment {top['experiment']} ({top['models']})", flush=True)
-    if args.selector == "both":
+    if len(selectors) > 1:
         with (OUT / "scores_comparison.csv").open("w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=list(all_rows[0]))
             writer.writeheader()
