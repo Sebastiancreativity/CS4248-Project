@@ -15,6 +15,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 
 class RunnerTests(unittest.TestCase):
     def test_agreement_suite_reuses_completed_scores(self):
+        self.run_suite("agreement", 2)
+
+    def test_all_selectors_reuse_completed_scores(self):
+        self.run_suite("all", 3)
+
+    def run_suite(self, selector, expected):
         fake_bleu = SimpleNamespace(corpus_bleu=lambda *a, **k: SimpleNamespace(score=20),
                                     corpus_chrf=lambda *a, **k: SimpleNamespace(score=40),
                                     sentence_chrf=lambda *a, **k: SimpleNamespace(score=50))
@@ -38,14 +44,21 @@ class RunnerTests(unittest.TestCase):
                 (output / 'dev_train20.hyp').write_text('stale\n')
                 (output / 'dev_train20.raw.jsonl').write_text(json.dumps({'src':'source','raw':'Translation in English:\nHello.'})+'\n')
             argv = ['runner', '--combinations', str(combos), '--owner', 'P Shricharan',
-                    '--data-dir', str(dev), '--dev', 'dev_train20', '--selector', 'agreement', '--bertscore', '--run-name', 'test', '--no-generate']
+                    '--data-dir', str(dev), '--dev', 'dev_train20', '--selector', selector, '--bertscore', '--run-name', 'test', '--no-generate']
             with patch.multiple(runner, DEV=dev, MODEL_OUTPUTS=root/'outputs', SCREEN=root/'screen',
-                                OUT_BASE=root/'results', version=lambda _: 'test', bertscore_from_args=lambda _: scorer), patch.object(sys, 'argv', argv), patch.dict(sys.modules, {'screen_model': SimpleNamespace(MODELS=dict.fromkeys(['a','b','c']))}), contextlib.redirect_stdout(io.StringIO()):
+                                OUT_BASE=root/'results', version=lambda _: 'test', bertscore_from_args=lambda _: scorer, qe_scores=lambda *a: [0.8]), patch.object(sys, 'argv', argv), patch.dict(sys.modules, {'screen_model': SimpleNamespace(MODELS=dict.fromkeys(['a','b','c'])), 'comet': SimpleNamespace(download_model=lambda *a, **k: 'fake', load_from_checkpoint=lambda *a: object()), 'torch': SimpleNamespace(cuda=SimpleNamespace(empty_cache=lambda: None))}), contextlib.redirect_stdout(io.StringIO()):
                 runner.main()
-                self.assertEqual(scorer.score.call_count, 2)
+                self.assertEqual(scorer.score.call_count, expected)
                 runner.main()
-                self.assertEqual(scorer.score.call_count, 2)
+                self.assertEqual(scorer.score.call_count, expected)
             out = root / 'results' / 'P Shricharan' / 'test'
             self.assertTrue((out / 'scores_comparison.csv').exists())
             self.assertEqual((root/'outputs/a/output/dev_train20.hyp').read_text(), 'Hello.\n')
-            self.assertEqual(len(list((out/'experiment_01').glob('*.checkpoint.json'))), 2)
+            self.assertEqual(len(list((out/'experiment_01').glob('*.checkpoint.json'))), expected)
+
+            if selector == 'all':
+                import csv
+                with (out / 'scores_comparison.csv').open() as handle:
+                    rows = list(csv.DictReader(handle))
+                self.assertEqual({r['selector'] for r in rows}, {'cometkiwi', 'chrf', 'bertscore'})
+                self.assertEqual(len(rows), 3)

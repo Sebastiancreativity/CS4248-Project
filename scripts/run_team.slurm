@@ -80,7 +80,7 @@ for owner in "$@"; do
     combinations="combinations_${slug// /_}.json"
     srun python -u scripts/run_ensembles.py \
         --combinations "$combinations" --owner "$owner" \
-        --run-name train702010_seed4248_bertscore --selector bertscore \
+        --run-name train702010_seed4248_all --selector all \
         --data-dir data/splits_70_20_10 --dev dev_train20 \
         --comet --bertscore --bertscore-device cuda --bertscore-batch-size 16 || status=1
 done

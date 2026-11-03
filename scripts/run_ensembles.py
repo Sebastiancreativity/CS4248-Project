@@ -99,8 +99,8 @@ def main():
     parser.add_argument("--data-dir", type=Path, default=DEV, help="parallel .zh/.en dataset directory")
     parser.add_argument("--comet", action="store_true", help="also score with reference-based COMET")
     add_bertscore_arguments(parser)
-    parser.add_argument("--selector", choices=["both", "cometkiwi", "chrf", "bertscore", "agreement"], default="both",
-                        help="candidate selection method; default runs both")
+    parser.add_argument("--selector", choices=["all", "both", "cometkiwi", "chrf", "bertscore", "agreement"], default="both",
+                        help="all: COMETKiwi, chrF++ and BERTScore; both: COMETKiwi and chrF++")
     parser.add_argument("--no-generate", action="store_true", help="require all model outputs to exist")
     parser.add_argument("--run-name", default=None, help="separate result subfolder under owner")
     parser.add_argument("--owner", choices=TEAM_MEMBERS, required=True,
@@ -169,7 +169,7 @@ def main():
                for dev in args.dev}
     all_qe = None
     all_pairs = {}
-    if args.selector in ('bertscore', 'agreement'):
+    if args.selector in ('bertscore', 'agreement', 'all'):
         pair_scorer = bertscore_scorer or EnglishBERTScore(args.bertscore_model, args.bertscore_device, args.bertscore_batch_size)
         needed = sorted({pair for trio in combos for pair in permutations(trio, 2)})
         for dev in args.dev:
@@ -178,7 +178,7 @@ def main():
                 print(f'BERTScore agreement: {dev} {a} -> {b}', flush=True)
                 path = OUT_BASE / '.cache' / 'bert_pairs' / dev / f'{a}--{b}.json'
                 all_pairs[dev][(a,b)] = cached_pair(path, all_hyp[dev][a], all_hyp[dev][b], pair_scorer)
-    if args.selector in ("both", "cometkiwi"):
+    if args.selector in ("both", "cometkiwi", "all"):
         from comet import download_model, load_from_checkpoint
         qe_model = load_from_checkpoint(download_model("Unbabel/wmt22-cometkiwi-da",
                                                        saving_directory=str(COMET_CACHE)))
@@ -194,7 +194,7 @@ def main():
         from comet import download_model, load_from_checkpoint
         comet_model = load_from_checkpoint(download_model("Unbabel/wmt22-comet-da",
                                                           saving_directory=str(COMET_CACHE)))
-    selectors = {'both': ['cometkiwi', 'chrf'], 'agreement': ['chrf', 'bertscore']}.get(args.selector, [args.selector])
+    selectors = {'all': ['cometkiwi', 'chrf', 'bertscore'], 'both': ['cometkiwi', 'chrf'], 'agreement': ['chrf', 'bertscore']}.get(args.selector, [args.selector])
     fingerprint = digest([
         {name: (ROOT / 'scripts' / name).read_text(encoding='utf-8') for name in
          ['run_ensembles.py', 'ensemble_cache.py', 'bertscore_metric.py', 'translation_cleaning.py']},
