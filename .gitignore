@@ -2,3 +2,4 @@
 .model-cache/
 /results/screening/ensemble/
 /results/ensembles/.cache
+/report/translation_quality_audit
