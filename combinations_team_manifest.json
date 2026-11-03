@@ -1,0 +1,399 @@
+{
+  "replacement_model": {
+    "name": "tower-mistral-7b",
+    "huggingface": "Unbabel/TowerInstruct-Mistral-7B-v0.2",
+    "source": "https://huggingface.co/Unbabel/TowerInstruct-Mistral-7B-v0.2",
+    "loading": "4-bit NF4; existing CUDA loader; model-card translation prompt with tokenizer chat template",
+    "inference_validated": false
+  },
+  "unique_combinations": 40,
+  "experiment_slots": 40,
+  "available_unique_trios": 56,
+  "note": "No duplicate trios across members. All configurations use deterministic greedy decoding as before. Higher translation scores are not guaranteed.",
+  "assignments": [
+    {
+      "owner": "Ming Zhe",
+      "file": "combinations_ming_zhe.json",
+      "experiments": [
+        {
+          "experiment": 1,
+          "models": [
+            "hunyuan-mt-7b",
+            "tower-7b",
+            "qwen2.5-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 2,
+          "models": [
+            "hunyuan-mt-7b",
+            "tower-7b",
+            "madlad400-3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 3,
+          "models": [
+            "hunyuan-mt-7b",
+            "tower-7b",
+            "nllb-1.3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 4,
+          "models": [
+            "hunyuan-mt-7b",
+            "qwen2.5-7b",
+            "madlad400-3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 5,
+          "models": [
+            "hunyuan-mt-7b",
+            "qwen2.5-7b",
+            "nllb-1.3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 6,
+          "models": [
+            "hunyuan-mt-7b",
+            "madlad400-3b",
+            "nllb-1.3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 7,
+          "models": [
+            "tower-7b",
+            "qwen2.5-7b",
+            "madlad400-3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 8,
+          "models": [
+            "tower-7b",
+            "qwen2.5-7b",
+            "nllb-1.3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 9,
+          "models": [
+            "tower-7b",
+            "madlad400-3b",
+            "nllb-1.3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 10,
+          "models": [
+            "qwen2.5-7b",
+            "madlad400-3b",
+            "nllb-1.3b"
+          ],
+          "shared_configuration": false
+        }
+      ]
+    },
+    {
+      "owner": "Theodore",
+      "file": "combinations_theodore.json",
+      "experiments": [
+        {
+          "experiment": 1,
+          "models": [
+            "hunyuan-mt-7b",
+            "tower-7b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 2,
+          "models": [
+            "hunyuan-mt-7b",
+            "tower-7b",
+            "qwen2.5-1.5b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 3,
+          "models": [
+            "hunyuan-mt-7b",
+            "nllb-1.3b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 4,
+          "models": [
+            "hunyuan-mt-7b",
+            "madlad400-3b",
+            "qwen2.5-3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 5,
+          "models": [
+            "tower-7b",
+            "qwen2.5-7b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 6,
+          "models": [
+            "hunyuan-mt-7b",
+            "nllb-1.3b",
+            "qwen2.5-1.5b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 7,
+          "models": [
+            "tower-7b",
+            "qwen2.5-3b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 8,
+          "models": [
+            "tower-7b",
+            "qwen2.5-7b",
+            "qwen2.5-1.5b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 9,
+          "models": [
+            "qwen2.5-7b",
+            "nllb-1.3b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 10,
+          "models": [
+            "tower-7b",
+            "nllb-1.3b",
+            "qwen2.5-3b"
+          ],
+          "shared_configuration": false
+        }
+      ]
+    },
+    {
+      "owner": "Reet",
+      "file": "combinations_reet.json",
+      "experiments": [
+        {
+          "experiment": 1,
+          "models": [
+            "hunyuan-mt-7b",
+            "tower-7b",
+            "qwen2.5-3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 2,
+          "models": [
+            "hunyuan-mt-7b",
+            "madlad400-3b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 3,
+          "models": [
+            "hunyuan-mt-7b",
+            "qwen2.5-7b",
+            "qwen2.5-1.5b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 4,
+          "models": [
+            "hunyuan-mt-7b",
+            "qwen2.5-1.5b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 5,
+          "models": [
+            "hunyuan-mt-7b",
+            "nllb-1.3b",
+            "qwen2.5-3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 6,
+          "models": [
+            "tower-7b",
+            "nllb-1.3b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 7,
+          "models": [
+            "tower-7b",
+            "qwen2.5-7b",
+            "qwen2.5-3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 8,
+          "models": [
+            "qwen2.5-7b",
+            "madlad400-3b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 9,
+          "models": [
+            "tower-7b",
+            "madlad400-3b",
+            "qwen2.5-1.5b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 10,
+          "models": [
+            "qwen2.5-7b",
+            "qwen2.5-1.5b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        }
+      ]
+    },
+    {
+      "owner": "Shri",
+      "file": "combinations_shri.json",
+      "experiments": [
+        {
+          "experiment": 1,
+          "models": [
+            "hunyuan-mt-7b",
+            "qwen2.5-7b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 2,
+          "models": [
+            "hunyuan-mt-7b",
+            "qwen2.5-7b",
+            "qwen2.5-3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 3,
+          "models": [
+            "hunyuan-mt-7b",
+            "qwen2.5-3b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 4,
+          "models": [
+            "hunyuan-mt-7b",
+            "madlad400-3b",
+            "qwen2.5-1.5b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 5,
+          "models": [
+            "tower-7b",
+            "madlad400-3b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 6,
+          "models": [
+            "hunyuan-mt-7b",
+            "qwen2.5-3b",
+            "qwen2.5-1.5b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 7,
+          "models": [
+            "tower-7b",
+            "qwen2.5-1.5b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 8,
+          "models": [
+            "tower-7b",
+            "madlad400-3b",
+            "qwen2.5-3b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 9,
+          "models": [
+            "qwen2.5-7b",
+            "qwen2.5-3b",
+            "tower-mistral-7b"
+          ],
+          "shared_configuration": false
+        },
+        {
+          "experiment": 10,
+          "models": [
+            "tower-7b",
+            "nllb-1.3b",
+            "qwen2.5-1.5b"
+          ],
+          "shared_configuration": false
+        }
+      ]
+    }
+  ]
+}
