@@ -151,6 +151,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True, choices=sorted(MODELS))
     ap.add_argument("--dev", nargs="+", default=["dev_wmt", "dev_short"])
+    ap.add_argument("--data-dir", type=Path, default=DEV)
     ap.add_argument("--batch-size", type=int, default=16)
     ap.add_argument("--max-new-tokens", type=int, default=256)
     ap.add_argument("--limit", type=int, default=0)
@@ -192,7 +193,7 @@ def main():
     # Generation for all dev sets first, then the LLM is freed before COMET loads.
     runs = []
     for dev in a.dev:
-        src, ref = read(DEV / f"{dev}.zh"), read(DEV / f"{dev}.en")
+        src, ref = read(a.data_dir / f"{dev}.zh"), read(a.data_dir / f"{dev}.en")
         if a.limit:
             src, ref = src[:a.limit], ref[:a.limit]
         print(f"[{a.model}] {dev}: {len(src)} sentences")
@@ -248,7 +249,7 @@ def rescore(a, cfg, out_dir):
     for dev in a.dev:
         recs = [json.loads(l) for l in open(out_dir / f"{dev}.raw.jsonl", encoding="utf-8")]
         src = [x["src"] for x in recs]
-        ref = read(DEV / f"{dev}.en")[:len(src)]
+        ref = read(a.data_dir / f"{dev}.en")[:len(src)]
         hyp = [clean(x["raw"], x["src"]) for x in recs]
         (out_dir / f"{dev}.hyp").write_text("\n".join(hyp) + "\n", encoding="utf-8")
         prev = [r for r in log if r["model"] == a.model and r["dev"] == dev and not r.get("rescored")][-1]

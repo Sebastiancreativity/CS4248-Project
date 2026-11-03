@@ -94,8 +94,9 @@ def score(src, ref, hyp, comet_model, bertscore_scorer=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--combinations", type=Path, default=ROOT / "combinations.json")
-    parser.add_argument("--dev", nargs="+", choices=["dev_wmt", "dev_short"],
+    parser.add_argument("--dev", nargs="+", choices=["dev_wmt", "dev_short", "dev_train20", "test_train10"],
                         default=["dev_wmt", "dev_short"])
+    parser.add_argument("--data-dir", type=Path, default=DEV, help="parallel .zh/.en dataset directory")
     parser.add_argument("--comet", action="store_true", help="also score with reference-based COMET")
     add_bertscore_arguments(parser)
     parser.add_argument("--selector", choices=["both", "cometkiwi", "chrf", "bertscore", "agreement"], default="both",
@@ -121,11 +122,11 @@ def main():
     if len({tuple(sorted(x)) for x in combos}) != len(combos):
         parser.error("duplicate combinations (order does not change an ensemble)")
 
-    sources = {dev: read(DEV / f"{dev}.zh") for dev in args.dev}
-    refs = {dev: read(DEV / f"{dev}.en") for dev in args.dev}
+    sources = {dev: read(args.data_dir / f"{dev}.zh") for dev in args.dev}
+    refs = {dev: read(args.data_dir / f"{dev}.en") for dev in args.dev}
     for dev in args.dev:
-        if len(sources[dev]) != len(refs[dev]):
-            parser.error(f"source/reference line mismatch in {dev}")
+        if not sources[dev] or len(sources[dev]) != len(refs[dev]):
+            parser.error(f"empty dataset or source/reference line mismatch in {dev}")
 
     models = list(dict.fromkeys(m for trio in combos for m in trio))
     for model in models:
@@ -145,7 +146,7 @@ def main():
             result = subprocess.run([sys.executable, "-X", "faulthandler", "-u",
                                      str(ROOT / "scripts" / "screen_model.py"),
                                      "--model", model, "--dev", *missing, "--no-comet",
-                                     "--output-dir", str(output_dir)])
+                                     "--output-dir", str(output_dir), "--data-dir", str(args.data_dir)])
             if result.returncode:
                 code = result.returncode & 0xFFFFFFFF
                 detail = " (Windows access violation)" if code == 0xC0000005 else ""
