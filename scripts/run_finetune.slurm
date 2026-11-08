@@ -38,7 +38,9 @@ mkdir -p "$TMPDIR" "$CS4248_MODEL_CACHE" "$run_dir" logs
 
 # A separate environment leaves existing inference jobs' dependencies alone.
 ft_env="$CS4248_CLUSTER_DIR/venv-finetune"
-exec 9>"$CS4248_CLUSTER_DIR/finetune-environment.lock"
+# NFS can implement shared flock as a read lock, which rejects write-only
+# descriptors. Read/write supports both the setup and training lock modes.
+exec 9<>"$CS4248_CLUSTER_DIR/finetune-environment.lock"
 if [[ "$stage" == setup ]]; then
     flock -x 9
     python3 -c 'import sys; assert (3, 10) <= sys.version_info[:2] <= (3, 12), "Use Python 3.10-3.12"'

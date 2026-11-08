@@ -177,6 +177,13 @@ sbatch scripts/run_finetune.slurm test ft702010_v1
 Do not edit code/data or replace adapters under a completed run. Integrity checks
 will reject mismatches instead of silently combining incompatible experiments.
 
+If an older launcher reports `flock: 9: Bad file descriptor` immediately in every
+training task, update `scripts/run_finetune.slurm`. Its environment lock must open
+descriptor 9 for both reading and writing (`exec 9<>...`), since shared locks on
+network storage may require a readable descriptor. This launcher-only correction
+does not change the training recipe: reuse the same run name, prepared split and
+installed environment, then resubmit the complete workflow.
+
 ## Local verification and method references
 
 The dependency-light checks run with `python -B -m unittest discover -s tests -v`.
