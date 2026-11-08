@@ -17,6 +17,8 @@ from translation_cleaning import clean
 from cache_paths import COMET_CACHE
 from bertscore_metric import add_arguments as add_bertscore_arguments, from_args as bertscore_from_args
 from checkpoint_loading import install_windows_checkpoint_reader
+from model_registry import MODELS, PROMPT, PLAIN_PROMPT, build_prompt
+from finetune_common import adapter_record, generation_identity, write_json
 import sacrebleu
 import torch
 from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer, BitsAndBytesConfig
@@ -25,21 +27,6 @@ ROOT = Path(__file__).resolve().parents[1]
 DEV = ROOT / "data" / "dev"
 RES = ROOT / "results" / "screening"
 
-MODELS = {
-    "qwen2.5-1.5b": dict(hf="Qwen/Qwen2.5-1.5B-Instruct"),
-    "qwen2.5-3b": dict(hf="Qwen/Qwen2.5-3B-Instruct"),
-    "qwen2.5-7b": dict(hf="Qwen/Qwen2.5-7B-Instruct", four_bit=True),
-    "hunyuan-mt-7b": dict(hf="tencent/Hunyuan-MT-7B", four_bit=True),
-    "tower-7b": dict(hf="Unbabel/TowerInstruct-7B-v0.2", four_bit=True),
-    "tower-mistral-7b": dict(hf="Unbabel/TowerInstruct-Mistral-7B-v0.2", four_bit=True,
-                            prompt="Translate the following text from Chinese into English.\nChinese: {src}\nEnglish:"),
-    "alma-7b": dict(hf="haoranxu/ALMA-7B", four_bit=True, chat=False),
-    "madlad400-3b": dict(hf="google/madlad400-3b-mt", seq2seq=True, target_prefix="<2en> ", streaming=True),
-    "nllb-1.3b": dict(hf="facebook/nllb-200-distilled-1.3B", seq2seq=True, src_lang="zho_Hans", tgt_lang="eng_Latn"),
-}
-
-PROMPT = "Translate the following Chinese text into English. Output only the English translation.\n\nChinese: {src}"
-PLAIN_PROMPT = "Translate this from Chinese into English:\nChinese: {src}\nEnglish:"
 CJK = re.compile(r"[一-鿿]")
 
 
@@ -47,13 +34,24 @@ def read(p):
     return Path(p).read_text(encoding="utf-8").splitlines()
 
 
-def load(cfg):
+def load(cfg, adapter_dir=None, base_only=False):
+    cfg = dict(cfg)
+    revision = {}
+    if adapter_dir:
+        record = json.loads((adapter_dir / "training_complete.json").read_text(encoding="utf-8"))
+        if record["base_model"] != cfg["hf"]:
+            raise ValueError("Adapter and base model do not match")
+        revision = {"revision": record["base_revision"]}
+        cfg["four_bit"] = record["quantized"]
+        cfg["streaming"] = False
     if not cfg.get("streaming"):
         install_windows_checkpoint_reader()
     tok_kwargs = {"padding_side": "right" if cfg.get("seq2seq") else "left"}
     if cfg.get("src_lang"):
         tok_kwargs["src_lang"] = cfg["src_lang"]
-    tok = AutoTokenizer.from_pretrained(cfg["hf"], **tok_kwargs)
+        tok_kwargs["tgt_lang"] = cfg["tgt_lang"]
+    tok = AutoTokenizer.from_pretrained(str(adapter_dir) if adapter_dir else cfg["hf"],
+                                       **({} if adapter_dir else revision), **tok_kwargs)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
     if cfg.get("streaming"):
@@ -67,10 +65,14 @@ def load(cfg):
         # Preserve the checkpoint dtype instead of the quantizer's implicit
         # FP16 default, which otherwise converts BF16 weights on the CPU.
         model = cls.from_pretrained(cfg["hf"], dtype=torch.bfloat16,
-                                    quantization_config=q, device_map="cuda")
+                                    quantization_config=q, device_map="cuda", **revision)
     else:
         cls = AutoModelForSeq2SeqLM if cfg.get("seq2seq") else AutoModelForCausalLM
-        model = cls.from_pretrained(cfg["hf"], dtype=torch.bfloat16).to("cuda")
+        model = cls.from_pretrained(cfg["hf"], dtype=torch.bfloat16, **revision).to("cuda")
+    if adapter_dir and not base_only:
+        from peft import PeftModel
+        model = PeftModel.from_pretrained(model, str(adapter_dir), is_trainable=False)
+        model.config.use_cache = True
     # Some translation checkpoints ship sampling defaults even though this
     # screening pipeline uses greedy decoding. Reset them to neutral values.
     model.generation_config.do_sample = False
@@ -78,17 +80,6 @@ def load(cfg):
     model.generation_config.top_p = 1.0
     model.generation_config.top_k = 50
     return tok, model.eval()
-
-
-def build_prompt(tok, cfg, src):
-    if cfg.get("seq2seq"):
-        return cfg.get("target_prefix", "") + src
-    if cfg.get("chat", True) and tok.chat_template:
-        return tok.apply_chat_template([{"role": "user", "content": cfg.get("prompt", PROMPT).format(src=src)}],
-                                       tokenize=False, add_generation_prompt=True)
-    return PLAIN_PROMPT.format(src=src)
-
-
 
 
 def repeats(text, n=3, times=3):
@@ -154,6 +145,8 @@ def main():
     ap.add_argument("--data-dir", type=Path, default=DEV)
     ap.add_argument("--batch-size", type=int, default=16)
     ap.add_argument("--max-new-tokens", type=int, default=256)
+    ap.add_argument("--adapter-dir", type=Path, help="completed fine-tuned adapter and tokenizer")
+    ap.add_argument("--base-only", action="store_true", help="use adapter's pinned base/tokenizer/precision without LoRA")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--no-comet", action="store_true")
     add_bertscore_arguments(ap)
@@ -161,6 +154,8 @@ def main():
                     help="directory for hypotheses/raw outputs (defaults to results/screening/<model>)")
     ap.add_argument("--rescore", action="store_true", help="re-clean saved raw outputs and re-score; no generation")
     a = ap.parse_args()
+    if a.base_only and not a.adapter_dir:
+        ap.error("--base-only requires --adapter-dir to pin the matching base revision")
     a.bertscore_scorer = bertscore_from_args(a)
     logs = ROOT / "logs"
     logs.mkdir(parents=True, exist_ok=True)
@@ -174,6 +169,10 @@ def main():
     crash_log.flush()
     faulthandler.enable(file=crash_log, all_threads=True)
     cfg = MODELS[a.model]
+    identity = None
+    if a.adapter_dir:
+        adapter_record(a.adapter_dir, a.model)
+        identity = generation_identity(a.model, a.adapter_dir, a.max_new_tokens, a.base_only)
     if not torch.cuda.is_available():
         ap.error(
             f"CUDA is unavailable in this Python environment (installed torch: {torch.__version__}). "
@@ -187,7 +186,7 @@ def main():
     power_w = gpu_power_limit_w()
     torch.cuda.reset_peak_memory_stats()
     t_load = time.time()
-    tok, model = load(cfg)
+    tok, model = load(cfg, a.adapter_dir, a.base_only)
     load_s = time.time() - t_load
 
     # Generation for all dev sets first, then the LLM is freed before COMET loads.
@@ -205,6 +204,8 @@ def main():
             "\n".join(json.dumps({"src": s, "raw": r}, ensure_ascii=False) for s, r in zip(src, raw)) + "\n",
             encoding="utf-8")
         (out_dir / f"{dev}.hyp").write_text("\n".join(hyp) + "\n", encoding="utf-8")
+        if identity:
+            write_json(out_dir / f"{dev}.generation.json", {"identity": identity})
         runs.append(dict(dev=dev, src=src, ref=ref, hyp=hyp, secs=secs))
     peak_gb = torch.cuda.max_memory_allocated() / 2**30
     del model
@@ -222,6 +223,8 @@ def log_row(a, cfg, dev, src, ref, hyp, run_info):
     n = len(hyp)
     row = dict(
         model=a.model, hf=cfg["hf"], dev=dev, n=n,
+        adapter=str(a.adapter_dir) if a.adapter_dir else None,
+        base_only=a.base_only,
         bleu=round(sacrebleu.corpus_bleu(hyp, [ref], tokenize="13a").score, 2),
         chrfpp=round(sacrebleu.corpus_chrf(hyp, [ref], word_order=2).score, 2),
         comet22=None if a.no_comet else comet22(src, hyp, ref),

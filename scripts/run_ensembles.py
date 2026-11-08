@@ -16,6 +16,7 @@ from itertools import permutations
 from importlib.metadata import version
 from ensemble_cache import cached_pair, choose_bert, digest, save
 from translation_cleaning import clean
+from finetune_common import generation_identity
 
 from cache_paths import COMET_CACHE
 from bertscore_metric import EnglishBERTScore, add_arguments as add_bertscore_arguments, from_args as bertscore_from_args
@@ -33,7 +34,7 @@ def read(path):
     return path.read_text(encoding="utf-8").splitlines()
 
 
-def valid_cache(output_dir, dev, src):
+def valid_cache(output_dir, dev, src, identity=None):
     raw = output_dir / f"{dev}.raw.jsonl"
     hyp = output_dir / f"{dev}.hyp"
     if not raw.exists() or not hyp.exists():
@@ -43,6 +44,10 @@ def valid_cache(output_dir, dev, src):
         return False
     try:
         records = [json.loads(line) for line in read(raw)]
+        if identity is not None:
+            metadata = json.loads((output_dir / f"{dev}.generation.json").read_text(encoding="utf-8"))
+            if metadata.get("identity") != identity:
+                return False
     except (ValueError, OSError):
         return False
     return len(records) == len(src) and all(r.get("src") == s for r, s in zip(records, src))
@@ -92,6 +97,7 @@ def score(src, ref, hyp, comet_model, bertscore_scorer=None):
 
 
 def main():
+    global MODEL_OUTPUTS, OUT_BASE
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--combinations", type=Path, default=ROOT / "combinations.json")
     parser.add_argument("--datasets", "--dev", dest="dev", nargs="+",
@@ -105,9 +111,25 @@ def main():
                         help="all: COMETKiwi, chrF++ and BERTScore; both: COMETKiwi and chrF++")
     parser.add_argument("--no-generate", action="store_true", help="require all model outputs to exist")
     parser.add_argument("--run-name", default=None, help="separate result subfolder under owner")
+    parser.add_argument("--adapter-root", type=Path, help="one completed adapter directory per model")
+    parser.add_argument("--base-only", action="store_true", help="matched pretrained control; do not load LoRA weights")
+    parser.add_argument("--model-outputs-dir", type=Path, help="isolated generation cache")
+    parser.add_argument("--results-dir", type=Path, help="isolated ensemble results and metric caches")
+    parser.add_argument("--generation-batch-size", type=int, default=16)
+    parser.add_argument("--max-new-tokens", type=int, default=256)
     parser.add_argument("--owner", choices=TEAM_MEMBERS, required=True,
                         help="required team member folder for this experiment run")
     args = parser.parse_args()
+    if args.adapter_root and (not args.model_outputs_dir or not args.results_dir):
+        parser.error("Fine-tuned runs require --model-outputs-dir and --results-dir")
+    if args.base_only and not args.adapter_root:
+        parser.error("--base-only requires --adapter-root")
+    if args.generation_batch_size < 1 or args.max_new_tokens < 1:
+        parser.error("Generation batch size and token limit must be positive")
+    if args.model_outputs_dir:
+        MODEL_OUTPUTS = args.model_outputs_dir
+    if args.results_dir:
+        OUT_BASE = args.results_dir
     if args.run_name and (Path(args.run_name).name != args.run_name or args.run_name in ('.', '..') or '/' in args.run_name or '\\' in args.run_name):
         parser.error('--run-name must be a single folder name')
     bertscore_scorer = bertscore_from_args(args)
@@ -132,15 +154,17 @@ def main():
 
     models = list(dict.fromkeys(m for trio in combos for m in trio))
     for model in models:
+        adapter_dir = args.adapter_root / model if args.adapter_root else None
+        identity = generation_identity(model, adapter_dir, args.max_new_tokens, args.base_only) if adapter_dir else None
         output_dir = MODEL_OUTPUTS / model / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
         # Migrate usable outputs from the original screening location on demand.
         legacy_dir = SCREEN / model
         for dev in args.dev:
-            if not valid_cache(output_dir, dev, sources[dev]) and valid_cache(legacy_dir, dev, sources[dev]):
+            if not adapter_dir and not valid_cache(output_dir, dev, sources[dev]) and valid_cache(legacy_dir, dev, sources[dev]):
                 shutil.copyfile(legacy_dir / f"{dev}.hyp", output_dir / f"{dev}.hyp")
                 shutil.copyfile(legacy_dir / f"{dev}.raw.jsonl", output_dir / f"{dev}.raw.jsonl")
-        missing = [dev for dev in args.dev if not valid_cache(output_dir, dev, sources[dev])]
+        missing = [dev for dev in args.dev if not valid_cache(output_dir, dev, sources[dev], identity)]
         if missing:
             if args.no_generate:
                 parser.error(f"missing or partial outputs for {model}: {', '.join(missing)}")
@@ -148,7 +172,11 @@ def main():
             result = subprocess.run([sys.executable, "-X", "faulthandler", "-u",
                                      str(ROOT / "scripts" / "screen_model.py"),
                                      "--model", model, "--dev", *missing, "--no-comet",
-                                     "--output-dir", str(output_dir), "--data-dir", str(args.data_dir)])
+                                     "--output-dir", str(output_dir), "--data-dir", str(args.data_dir),
+                                     "--batch-size", str(args.generation_batch_size),
+                                     "--max-new-tokens", str(args.max_new_tokens)] +
+                                    (["--adapter-dir", str(adapter_dir)] if adapter_dir else []) +
+                                    (["--base-only"] if args.base_only else []))
             if result.returncode:
                 code = result.returncode & 0xFFFFFFFF
                 detail = " (Windows access violation)" if code == 0xC0000005 else ""

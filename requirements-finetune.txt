@@ -1,0 +1,5 @@
+# Same CUDA/metric environment as the existing cluster runners, plus adapters.
+-r requirements-cluster.txt
+peft==0.17.1
+accelerate==1.10.1
+filelock>=3.16

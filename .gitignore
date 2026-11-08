@@ -7,3 +7,6 @@
 /data/test_suites/
 /results/ensembles/test_suites/
 /results/ensembles/*/test_*_all/
+/artifacts/finetune/
+/.finetune-test-env/
+__pycache__/

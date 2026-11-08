@@ -1,6 +1,15 @@
 # `official/` — Official Results, Code, and Process Records
 
-This document records the source data, development-set construction, model-screening procedure, current screening results, and experiment history for the Chinese-to-English translation project. The original data in `official/` is preserved unchanged.
+**Fine-tuning workflow:** Earlier screening/ensemble results below used pretrained
+checkpoints without project-specific weight updates. For actual LoRA/QLoRA
+training on the cleaned 70% partition, paired before/after development evaluation,
+and subsequent test evaluation, see [FINETUNING.md](FINETUNING.md). On the cluster:
+
+```bash
+bash scripts/submit_finetune_pipeline.sh ft702010_v1
+```
+
+This document records the source data, development-set construction, model-screening procedure, and experiment history for the Chinese-to-English translation project. The repository's training files include the group's November 3 corrections; the downloaded originals remain on Canvas.
 
 ## 1. Original Data
 
@@ -8,7 +17,7 @@ The original datasets are stored in Canvas and must not be modified.
 
 | File | Number of Lines | Description |
 |---|---:|---|
-| `train.zh-en.{zh,en}` | 15,406 | Course training data. It matches the ALMA-Human-Parallel zh-en dataset on Hugging Face, except for trailing spaces on 16 lines. |
+| `train.zh-en.{zh,en}` | 15,372 | Current cleaned course training pairs; the original download had 15,406 pairs. Split construction additionally removes duplicate sources. |
 | `wmttest2022.zh` / `wmttest2022.AnnA.en` | 1,875 | WMT22 test set with Annotator A references. Compared with the sacrebleu version, 4 lines contain one additional space. |
 | `tatoeba.zh` / `tatoeba.en` | 469 | Tatoeba Chinese test sentences and their provided English references. All source sentences are in Simplified Chinese. |
 
@@ -24,7 +33,7 @@ All development sentences were deduplicated against both official test sets and 
 |---|---:|---|---|---:|---:|
 | `dev_wmt` | 1,033 | WMT23 zh-en general test: news (527) and user_review (506), sampled by complete document (119 documents); manuals excluded | Benchmark aligned with the WMT22 test set (39.2 characters on average; 23% are ≤15 characters) | 41.5 | 22% |
 | `dev_short` | 992 | Tatoeba cmn-eng (MTEB mirror), converted from Traditional to Simplified Chinese; 7 sentences overlapping with the official test set and 1 duplicate removed | Benchmark aligned with the Tatoeba test set (8.8 characters on average; 93% are ≤15 characters) | 11.0 | 87% |
-| `dev_alma` | 1,002 | ALMA-Human-Parallel zh-en validation set (news) | Used for LoRA early stopping only; not used for candidate screening | 47.9 | 3% |
+| `dev_alma` | 1,002 | ALMA-Human-Parallel zh-en validation set (news) | Originally reserved for LoRA validation; not used by the current 70/20/10 fine-tuning workflow | 47.9 | 3% |
 
 Each development set contains the following files:
 
@@ -114,7 +123,7 @@ python scripts/run_ensembles.py --combinations combinations.json --owner "P Shri
 
 The runner generates missing model outputs once per model and development set under `results/screening/ensemble/<model>/output/`, then reuses the saved hypotheses for every combination. It can migrate valid outputs from the original `results/screening/<model>/` location. By default, it runs both selection methods on the same candidates: reference-free COMETKiwi quality estimation (Chinese source plus English candidate) and pairwise chrF++ agreement. COMETKiwi scores are cached by model and development set. Use `--selector cometkiwi` or `--selector chrf` to run just one method. It reports reference-based BLEU, chrF++ and, with `--comet`, COMET. Each `results/ensembles/<member>/experiment_XX/` folder contains the selected hypotheses for each method and development set, plus `scores.json`. Member folders are Ming Zhe, Theodore, Reet, and Shri; select one with required `--owner`. Per-member summary CSV and JSON files are also written. Use `--no-generate` to score only existing model outputs, or `--dev dev_wmt` to run only one development set. COMETKiwi may require accepting its model license on Hugging Face before first download.
 
-`dev_wmt` (1,033 referenced news/user-review sentences) and `dev_short` (992 referenced short sentences) are for model and ensemble selection. `dev_alma` (1,002 referenced sentences) is reserved for LoRA early stopping. The official WMT22 set has 1,875 Chinese sentences and Annotator A English references. The Tatoeba test set has 469 Chinese sentences with English references in `tatoeba.en`. Both official sets support BLEU, chrF++ and reference-based COMET evaluation after the final configuration is fixed on development data.
+`dev_wmt` (1,033 referenced news/user-review sentences) and `dev_short` (992 referenced short sentences) were used for earlier model and ensemble selection. `dev_alma` (1,002 referenced sentences) was originally reserved for LoRA validation; the current fine-tuning workflow uses `dev_train20` instead. The official WMT22 set has 1,875 Chinese sentences and Annotator A English references. The Tatoeba test set has 469 Chinese sentences with English references in `tatoeba.en`. Both official sets support BLEU, chrF++ and reference-based COMET evaluation after the final configuration is fixed on development data.
 
 The runner needs `sacrebleu`, PyTorch, Transformers, and their model dependencies; `--comet` additionally needs `unbabel-comet`. New model downloads and inference require a suitable GPU. MADLAD and NLLB use the encoder-decoder path added to `scripts/screen_model.py`.
 
