@@ -4,3 +4,6 @@
 /results/ensembles/.cache
 /report/translation_quality_audit
 /data/splits_70_20_10/
+/data/test_suites/
+/results/ensembles/test_suites/
+/results/ensembles/*/test_*_all/

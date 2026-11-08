@@ -94,7 +94,9 @@ def score(src, ref, hyp, comet_model, bertscore_scorer=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--combinations", type=Path, default=ROOT / "combinations.json")
-    parser.add_argument("--dev", nargs="+", choices=["dev_wmt", "dev_short", "dev_train20", "test_train10"],
+    parser.add_argument("--datasets", "--dev", dest="dev", nargs="+",
+                        choices=["dev_wmt", "dev_short", "dev_train20", "test_train10",
+                                 "test_wmt22", "test_tatoeba"],
                         default=["dev_wmt", "dev_short"])
     parser.add_argument("--data-dir", type=Path, default=DEV, help="parallel .zh/.en dataset directory")
     parser.add_argument("--comet", action="store_true", help="also score with reference-based COMET")
@@ -249,6 +251,9 @@ def main():
             (exp_dir / "scores.json").write_text(json.dumps(experiment_rows, indent=2), encoding="utf-8")
         all_rows.extend(rows)
         for dev in args.dev:
+            if dev.startswith("test_"):
+                print(f"Saved {len(combos)} {selector} test evaluations on {dev}.", flush=True)
+                continue
             top = max((r for r in rows if r["dev"] == dev),
                       key=lambda r: r.get("comet22", r["chrfpp"]))
             print(f"Best {selector} on {dev}: experiment {top['experiment']} ({top['models']})", flush=True)

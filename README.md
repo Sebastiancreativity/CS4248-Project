@@ -10,7 +10,7 @@ The original datasets are stored in Canvas and must not be modified.
 |---|---:|---|
 | `train.zh-en.{zh,en}` | 15,406 | Course training data. It matches the ALMA-Human-Parallel zh-en dataset on Hugging Face, except for trailing spaces on 16 lines. |
 | `wmttest2022.zh` / `wmttest2022.AnnA.en` | 1,875 | WMT22 test set with Annotator A references. Compared with the sacrebleu version, 4 lines contain one additional space. |
-| `tatoeba.zh` | 469 | Tatoeba test set containing Chinese source sentences only, with no English references. All sentences are in Simplified Chinese. |
+| `tatoeba.zh` / `tatoeba.en` | 469 | Tatoeba Chinese test sentences and their provided English references. All source sentences are in Simplified Chinese. |
 
 **Data-integrity rule:** Keep the original files unchanged. Any normalization, cleaning, or conversion should be performed on derived copies rather than on the originals.
 
@@ -114,7 +114,7 @@ python scripts/run_ensembles.py --combinations combinations.json --owner "P Shri
 
 The runner generates missing model outputs once per model and development set under `results/screening/ensemble/<model>/output/`, then reuses the saved hypotheses for every combination. It can migrate valid outputs from the original `results/screening/<model>/` location. By default, it runs both selection methods on the same candidates: reference-free COMETKiwi quality estimation (Chinese source plus English candidate) and pairwise chrF++ agreement. COMETKiwi scores are cached by model and development set. Use `--selector cometkiwi` or `--selector chrf` to run just one method. It reports reference-based BLEU, chrF++ and, with `--comet`, COMET. Each `results/ensembles/<member>/experiment_XX/` folder contains the selected hypotheses for each method and development set, plus `scores.json`. Member folders are Ming Zhe, Theodore, Reet, and Shri; select one with required `--owner`. Per-member summary CSV and JSON files are also written. Use `--no-generate` to score only existing model outputs, or `--dev dev_wmt` to run only one development set. COMETKiwi may require accepting its model license on Hugging Face before first download.
 
-`dev_wmt` (1,033 referenced news/user-review sentences) and `dev_short` (992 referenced short sentences) are for model and ensemble selection. `dev_alma` (1,002 referenced sentences) is reserved for LoRA early stopping. The official WMT22 set has 1,875 Chinese sentences and English references, but should not be used for model selection. The Tatoeba test set has 469 Chinese sentences and no English references, so BLEU/chrF++/reference-based COMET cannot be computed for it.
+`dev_wmt` (1,033 referenced news/user-review sentences) and `dev_short` (992 referenced short sentences) are for model and ensemble selection. `dev_alma` (1,002 referenced sentences) is reserved for LoRA early stopping. The official WMT22 set has 1,875 Chinese sentences and Annotator A English references. The Tatoeba test set has 469 Chinese sentences with English references in `tatoeba.en`. Both official sets support BLEU, chrF++ and reference-based COMET evaluation after the final configuration is fixed on development data.
 
 The runner needs `sacrebleu`, PyTorch, Transformers, and their model dependencies; `--comet` additionally needs `unbabel-comet`. New model downloads and inference require a suitable GPU. MADLAD and NLLB use the encoder-decoder path added to `scripts/screen_model.py`.
 
@@ -165,8 +165,25 @@ and the slow tokenizer. The hash records the encoder/layer and library settings.
 Higher is better, but these are similarity scores, not percentages of correct
 translations. Empty hypotheses remain in the average; empty references or
 mismatched line counts are rejected. Like BLEU and chrF++, this requires
-references and cannot evaluate the unreferenced Tatoeba test set. It is used
+references, including the provided `tatoeba.en` for Tatoeba evaluation. It is used
 only after ensemble selection, so references do not influence candidate choices.
+
+### Official test suite for all team combinations
+
+Evaluate all four members' combinations on WMT22 and Tatoeba with all three
+selectors from a CUDA Python environment:
+
+```bash
+python scripts/run_test_suite.py --dry-run
+python scripts/run_test_suite.py --bertscore-device cuda
+```
+
+The complete suite produces 240 evaluation rows and a combined CSV with member
+names. To run one member, append e.g. `--owners Shri`. On the cluster, submit
+`sbatch scripts/run_team.slurm --test-set official`. Keep the final configuration
+fixed using development results when reporting held-out test performance.
+See [test-suite instructions](CLUSTER_SHRI_REET.md#test-evaluation-for-all-members)
+for outputs, restarts and the optional internal test split.
 
 ### Member 3: run on the SoC GPU cluster
 

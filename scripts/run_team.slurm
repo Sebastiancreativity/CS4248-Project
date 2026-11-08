@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Submit from ~/cs4248-mt: sbatch scripts/run_team.slurm "Ming Zhe"
+# All members on official tests: sbatch scripts/run_team.slurm --test-set official
 # Override partition/time/GPU using sbatch options if needed; inspect sinfo first.
 #SBATCH --job-name=cs4248-team
 #SBATCH --partition=gpu-long
@@ -24,8 +25,15 @@ cd "$SLURM_SUBMIT_DIR"
     echo "Submit from the CS4248-Project root directory" >&2; exit 1;
 }
 
-if [[ "$#" -eq 0 ]]; then
-    echo 'Usage: sbatch scripts/run_team.slurm "Ming Zhe"|Theodore|Reet|Shri [more owners]' >&2
+test_set=""
+if [[ "${1:-}" = "--test-set" ]]; then
+    case "${2:-}" in
+        official|internal|both) test_set="$2"; shift 2 ;;
+        *) echo '--test-set requires official, internal or both' >&2; exit 1 ;;
+    esac
+fi
+if [[ "$#" -eq 0 && -z "$test_set" ]]; then
+    echo 'Usage: sbatch scripts/run_team.slurm [--test-set official|internal|both] [owners]' >&2
     exit 1
 fi
 for owner in "$@"; do
@@ -71,6 +79,19 @@ print("GPU:", torch.cuda.get_device_name(0), "PyTorch:", torch.__version__, "CUD
 PY
 mkdir -p logs
 python -m pip freeze > "logs/suite-${SLURM_JOB_ID}-environment.txt"
+
+if [[ -n "$test_set" ]]; then
+    if [[ "$test_set" = "internal" || "$test_set" = "both" ]]; then
+        python scripts/build_train_splits.py
+    fi
+    owner_args=()
+    if [[ "$#" -gt 0 ]]; then
+        owner_args=(--owners "$@")
+    fi
+    srun python -u scripts/run_test_suite.py --test-set "$test_set" \
+        --bertscore-device cuda --bertscore-batch-size 16 "${owner_args[@]}"
+    exit "$?"
+fi
 
 # Build once, deterministically; the test split is never passed to selection.
 python scripts/build_train_splits.py
