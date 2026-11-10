@@ -227,8 +227,15 @@ class SubmissionTests(unittest.TestCase):
             run = root / "artifacts/finetune/original"
             run.mkdir(parents=True)
             (run / "run.json").write_text("{}")
+            if mode.startswith("checkout"):
+                (root / "eos_checkout.json").write_text("{}")
+                (root / "scripts/run_eos_checkout.slurm").touch()
             script = r'''
 mode="$2"
+python3() {
+    printf 'verify %s\n' "$*" >> calls
+    [[ "$mode" != checkout_invalid ]]
+}
 scontrol() {
     printf 'control %s\n' "$*" >> calls
     if [[ "$1" == -o ]]; then
@@ -312,6 +319,20 @@ source "$1" original revised 123 456
         result, calls = self.launch("already_held")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("cancel 456", calls)
+
+    def test_separate_checkout_uses_the_guarded_launcher_for_every_job(self):
+        result, calls = self.launch("checkout")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(calls[0].startswith("verify -B scripts/prepare_eos_checkout.py --verify"))
+        submissions = [c for c in calls if c.startswith("submit")]
+        self.assertEqual(len(submissions), 10)
+        self.assertTrue(all("scripts/run_eos_checkout.slurm" in c for c in submissions))
+
+    def test_changed_separate_copy_stops_before_touching_jobs(self):
+        result, calls = self.launch("checkout_invalid")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(len(calls), 1)
+        self.assertTrue(calls[0].startswith("verify"))
 
 
 if __name__ == "__main__":

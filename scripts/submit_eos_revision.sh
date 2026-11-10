@@ -13,6 +13,12 @@ old_test="${4:?Missing pending test job ID}"
 [[ ! -e "artifacts/finetune/$revision" ]] || { echo 'Use a new revision name; do not submit duplicate workers.' >&2; exit 1; }
 parallel="${CS4248_EVAL_PARALLEL:-4}"
 [[ "$parallel" =~ ^[1-8]$ ]] || { echo 'CS4248_EVAL_PARALLEL must be 1-8.' >&2; exit 1; }
+launcher=scripts/run_eos_revision.slurm
+if [[ -f eos_checkout.json ]]; then
+    python3 -B scripts/prepare_eos_checkout.py --verify
+    launcher=scripts/run_eos_checkout.slurm
+    [[ -f "$launcher" ]] || { echo 'Missing separate-checkout launcher.' >&2; exit 1; }
+fi
 record=$(scontrol -o show job "$old_test")
 state=""; reason=""; dependency=""
 for field in $record; do
@@ -49,7 +55,6 @@ submit() {
     [[ "$job_id" =~ ^[0-9]+$ ]] || { echo "Unexpected sbatch response: $response" >&2; exit 1; }
     jobs+=("$job_id")
 }
-launcher=scripts/run_eos_revision.slurm
 # Validation can overlap the original scoring job: it reads only final raw
 # translations/adapters and writes exclusively to the new revision directory.
 submit "$launcher" prepare dev "$source_run" "$revision"

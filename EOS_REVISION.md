@@ -42,6 +42,56 @@ CS4248_EVAL_PARALLEL=2 bash scripts/submit_eos_revision.sh ft702010_v1 ft702010_
 Run one submission command once. Do not run both examples or resume the old
 test launcher on the revision directory.
 
+### If git pull refuses to overwrite local files
+
+A cluster checkout populated by earlier SCP uploads can contain locally modified
+or untracked recipe files. A refused pull does not install the new launcher.
+Do not stash, reset, clean or force-checkout the active training/evaluation files.
+The preferred recovery is a **separate checkout**:
+
+```bash
+cd ~/cs4248-mt
+scontrol hold 1096787
+git fetch origin MT
+git worktree add --detach ~/cs4248-mt-eos origin/MT
+cd ~/cs4248-mt-eos
+python3 -B scripts/prepare_eos_checkout.py --source-repo ~/cs4248-mt --run-name ft702010_v1 &&
+bash scripts/submit_eos_revision.sh ft702010_v1 ft702010_eos_v1 1096786 1096787
+```
+
+This leaves the active checkout intact. The preparation step copies the exact
+original recipe and cleaned inputs into the fresh checkout, retains the new EOS
+drivers, and links to the original run's adapters/results. A bare clone without
+this step might contain different cleaned data or fail the run's code checks.
+Every new worker verifies the copied inputs against the original run before
+starting. Existing adapters and the shared model cache are reused; there is no
+retraining or full model copy. The new outputs and logs live under
+`~/cs4248-mt-eos`, and the original dev job continues under `~/cs4248-mt`.
+
+Changing folders does not change the experiment. Corrected stopping remains the
+only intended decoding difference and is checked on full dev before test. This
+deployment method does **not** remove the existing dev-to-test dependency.
+
+Alternatively, use the additive installer in the existing checkout; it verifies the prepared run's hashes and
+installs only the five missing EOS/parallel/priority helpers. Existing files must
+be byte-identical or installation stops before writing anything. Git HEAD and
+the index are not changed.
+
+```bash
+cd ~/cs4248-mt
+scontrol hold 1096787
+git fetch origin MT
+installer=$(mktemp /tmp/cs4248-eos-install.XXXXXXXX.py)
+git show origin/MT:scripts/install_eos_additions.py > "$installer" &&
+python3 "$installer" --commit origin/MT --run-dir artifacts/finetune/ft702010_v1 &&
+bash scripts/submit_eos_revision.sh ft702010_v1 ft702010_eos_v1 1096786 1096787
+```
+
+The `&&` conditions prevent job submission if installation fails. If there is an
+error, leave the old test held and inspect the message; the current dev job is
+unaffected. This installs the same pipeline described below: test generation
+still follows corrected dev selection.
+
 ## Work and dependencies
 
 1. Snapshot the completed dev raw translations and link to the eight existing
