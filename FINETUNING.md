@@ -144,6 +144,10 @@ and caches are isolated from each other and from earlier experiments.
 
 ## Monitor and resume
 
+To obtain the frozen ensemble and matched individual baseline results before the
+full test grid, see [PRIORITY_TEST_RESULTS.md](PRIORITY_TEST_RESULTS.md). This can
+be queued after an existing dev job without cancelling it.
+
 For parallel dev/test evaluation that resumes the existing run, progress counts,
 and commands for sharing trained adapters or saved candidates with teammates,
 see [PARALLEL_EVALUATION.md](PARALLEL_EVALUATION.md). The parallel launcher keeps
