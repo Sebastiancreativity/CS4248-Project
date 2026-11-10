@@ -144,6 +144,11 @@ and caches are isolated from each other and from earlier experiments.
 
 ## Monitor and resume
 
+For parallel dev/test evaluation that resumes the existing run, progress counts,
+and commands for sharing trained adapters or saved candidates with teammates,
+see [PARALLEL_EVALUATION.md](PARALLEL_EVALUATION.md). The parallel launcher keeps
+the original recipe and run fingerprints unchanged.
+
 ```bash
 squeue -u "$USER"
 ```
