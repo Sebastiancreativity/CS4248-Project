@@ -1,0 +1,203 @@
+{
+  "name": "qwen3b_selfpool",
+  "dev": [
+    "dev_wmt",
+    "dev_alma"
+  ],
+  "systems": {
+    "qwen2.5-3b": "results/candidates/qwen2.5-3b.{dev}.jsonl"
+  },
+  "scorers": {
+    "nllb_fwd": {
+      "type": "likelihood",
+      "name": "nllb1.3b.fwd",
+      "model": "facebook/nllb-200-distilled-1.3B",
+      "src_lang": "zho_Hans",
+      "tgt_lang": "eng_Latn",
+      "batch_size": 16
+    },
+    "opus_fwd": {
+      "type": "likelihood",
+      "name": "opusmt.zh-en.fwd",
+      "model": "Helsinki-NLP/opus-mt-zh-en",
+      "batch_size": 32
+    },
+    "opus_rev": {
+      "type": "likelihood",
+      "name": "opusmt.en-zh.rev",
+      "model": "Helsinki-NLP/opus-mt-en-zh",
+      "reverse": true,
+      "prefix": ">>cmn_Hans<< ",
+      "batch_size": 32
+    },
+    "opus_cov": {
+      "type": "coverage",
+      "name": "opusmt.zh-en.cov.L-2",
+      "model": "Helsinki-NLP/opus-mt-zh-en",
+      "layer": -2,
+      "batch_size": 16
+    }
+  },
+  "features": {
+    "fwd": "nllb_fwd",
+    "fwd_opus": "opus_fwd",
+    "rev": "opus_rev"
+  },
+  "methods": [
+    {
+      "name": "greedy",
+      "type": "first"
+    },
+    {
+      "name": "mbr",
+      "guard": false,
+      "grid": {
+        "mbr": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+rule",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "rule": [
+          0,
+          0.01,
+          0.02,
+          0.05,
+          0.1
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+fwd",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "fwd": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+fwd_opus",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "fwd_opus": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+rev",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "rev": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+fwd+rev",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "fwd": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ],
+        "rev": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+rule+fwd+rev",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "rule": [
+          0,
+          0.02,
+          0.05
+        ],
+        "fwd": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ],
+        "rev": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "oracle",
+      "type": "oracle"
+    }
+  ],
+  "repair": {
+    "base": "mbr+guard+rule+fwd+rev",
+    "coverage": "opus_cov",
+    "tau": 0.1,
+    "generator": "Qwen/Qwen2.5-1.5B-Instruct",
+    "batch_size": 8
+  }
+}

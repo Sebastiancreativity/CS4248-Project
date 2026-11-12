@@ -1,0 +1,447 @@
+{
+  "dev": "dev_train20",
+  "n_tune": 1540,
+  "n_eval": 1528,
+  "systems": {
+    "hunyuan-mt-7b": "results/candidates/ft.hunyuan-mt-7b.{dev}.txt",
+    "qwen2.5-7b": "results/candidates/ft.qwen2.5-7b.{dev}.txt",
+    "tower-mistral-7b": "results/candidates/ft.tower-mistral-7b.{dev}.txt"
+  },
+  "results": {
+    "hunyuan-mt-7b_only": {
+      "metrics": {
+        "bleu": 36.94,
+        "chrfpp": 60.84,
+        "comet22": 85.38,
+        "omission": 0.2736,
+        "entity_missing": 0.1741,
+        "number_dropped": 0.1139,
+        "too_short": 0.0085,
+        "too_long": 0.0059,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.7199
+      },
+      "tuned": {},
+      "picked": {
+        "hunyuan-mt-7b:1best": 1528
+      },
+      "seconds": 0.9,
+      "beats": {
+        "mbr": 0.957,
+        "team_cometkiwi": 0.006
+      }
+    },
+    "qwen2.5-7b_only": {
+      "metrics": {
+        "bleu": 30.18,
+        "chrfpp": 56.4,
+        "comet22": 84.52,
+        "omission": 0.2971,
+        "entity_missing": 0.1996,
+        "number_dropped": 0.1224,
+        "too_short": 0.0111,
+        "too_long": 0.0059,
+        "untranslated_han": 0.0007,
+        "repetition": 0.0,
+        "clean": 0.6963
+      },
+      "tuned": {},
+      "picked": {
+        "qwen2.5-7b:1best": 1528
+      },
+      "seconds": 0.9,
+      "beats": {
+        "mbr": 0.0,
+        "team_cometkiwi": 0.0
+      }
+    },
+    "tower-mistral-7b_only": {
+      "metrics": {
+        "bleu": 34.97,
+        "chrfpp": 59.44,
+        "comet22": 85.05,
+        "omission": 0.2762,
+        "entity_missing": 0.1839,
+        "number_dropped": 0.1119,
+        "too_short": 0.0098,
+        "too_long": 0.0046,
+        "untranslated_han": 0.0007,
+        "repetition": 0.0,
+        "clean": 0.7179
+      },
+      "tuned": {},
+      "picked": {
+        "tower-mistral-7b:1best": 1528
+      },
+      "seconds": 0.8,
+      "beats": {
+        "mbr": 0.01,
+        "team_cometkiwi": 0.0
+      }
+    },
+    "team_bertscore": {
+      "metrics": {
+        "bleu": 35.19,
+        "chrfpp": 59.91,
+        "comet22": 85.4,
+        "omission": 0.2683,
+        "entity_missing": 0.1688,
+        "number_dropped": 0.1145,
+        "too_short": 0.0092,
+        "too_long": 0.0039,
+        "untranslated_han": 0.0007,
+        "repetition": 0.0,
+        "clean": 0.7264
+      },
+      "tuned": {},
+      "picked": {
+        "hunyuan-mt-7b:1best": 630,
+        "qwen2.5-7b:1best": 406,
+        "tower-mistral-7b:1best": 492
+      },
+      "seconds": 0.9,
+      "beats": {
+        "mbr": 0.999,
+        "team_cometkiwi": 0.001
+      }
+    },
+    "team_chrf": {
+      "metrics": {
+        "bleu": 34.98,
+        "chrfpp": 60.23,
+        "comet22": 85.22,
+        "omission": 0.2605,
+        "entity_missing": 0.1643,
+        "number_dropped": 0.1145,
+        "too_short": 0.0052,
+        "too_long": 0.0085,
+        "untranslated_han": 0.0007,
+        "repetition": 0.0,
+        "clean": 0.731
+      },
+      "tuned": {},
+      "picked": {
+        "hunyuan-mt-7b:1best": 635,
+        "qwen2.5-7b:1best": 409,
+        "tower-mistral-7b:1best": 484
+      },
+      "seconds": 1.0,
+      "beats": {
+        "mbr": 0.5,
+        "team_cometkiwi": 0.0
+      }
+    },
+    "team_cometkiwi": {
+      "metrics": {
+        "bleu": 34.73,
+        "chrfpp": 59.57,
+        "comet22": 85.62,
+        "omission": 0.2651,
+        "entity_missing": 0.1662,
+        "number_dropped": 0.1132,
+        "too_short": 0.0098,
+        "too_long": 0.0052,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.7297
+      },
+      "tuned": {},
+      "picked": {
+        "hunyuan-mt-7b:1best": 528,
+        "qwen2.5-7b:1best": 458,
+        "tower-mistral-7b:1best": 542
+      },
+      "seconds": 1.1,
+      "beats": {
+        "mbr": 1.0
+      }
+    },
+    "mbr": {
+      "metrics": {
+        "bleu": 34.98,
+        "chrfpp": 60.23,
+        "comet22": 85.22,
+        "omission": 0.2605,
+        "entity_missing": 0.1643,
+        "number_dropped": 0.1145,
+        "too_short": 0.0052,
+        "too_long": 0.0085,
+        "untranslated_han": 0.0007,
+        "repetition": 0.0,
+        "clean": 0.731
+      },
+      "tuned": {
+        "weights": {
+          "mbr": 1
+        },
+        "T": null,
+        "aux": [],
+        "guard": false,
+        "tune_chrfpp": 60.551
+      },
+      "picked": {
+        "hunyuan-mt-7b:1best": 635,
+        "qwen2.5-7b:1best": 409,
+        "tower-mistral-7b:1best": 484
+      },
+      "seconds": 1.7,
+      "beats": {
+        "team_cometkiwi": 0.0
+      }
+    },
+    "prior+mbr": {
+      "metrics": {
+        "bleu": 36.88,
+        "chrfpp": 60.81,
+        "comet22": 85.4,
+        "omission": 0.2729,
+        "entity_missing": 0.1734,
+        "number_dropped": 0.1139,
+        "too_short": 0.0072,
+        "too_long": 0.0065,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.7205
+      },
+      "tuned": {
+        "weights": {
+          "mbr": 1,
+          "sys_hunyuan-mt-7b": 0.2,
+          "sys_tower-mistral-7b": 0
+        },
+        "T": null,
+        "aux": [],
+        "guard": true,
+        "tune_chrfpp": 60.692
+      },
+      "picked": {
+        "hunyuan-mt-7b:1best": 1509,
+        "qwen2.5-7b:1best": 10,
+        "tower-mistral-7b:1best": 9
+      },
+      "seconds": 19.5,
+      "beats": {
+        "mbr": 0.982,
+        "team_cometkiwi": 0.006
+      }
+    },
+    "prior+mbr+rev": {
+      "metrics": {
+        "bleu": 35.34,
+        "chrfpp": 60.53,
+        "comet22": 85.4,
+        "omission": 0.2565,
+        "entity_missing": 0.161,
+        "number_dropped": 0.1106,
+        "too_short": 0.0052,
+        "too_long": 0.0085,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.7356
+      },
+      "tuned": {
+        "weights": {
+          "mbr": 1,
+          "sys_hunyuan-mt-7b": 0.05,
+          "sys_tower-mistral-7b": 0.05,
+          "rev_cal": 0.2
+        },
+        "T": null,
+        "aux": [],
+        "guard": true,
+        "tune_chrfpp": 60.915
+      },
+      "picked": {
+        "hunyuan-mt-7b:1best": 627,
+        "qwen2.5-7b:1best": 208,
+        "tower-mistral-7b:1best": 693
+      },
+      "seconds": 84.7,
+      "beats": {
+        "mbr": 1.0,
+        "team_cometkiwi": 0.001
+      }
+    },
+    "prior+audit": {
+      "metrics": {
+        "bleu": 35.36,
+        "chrfpp": 60.53,
+        "comet22": 85.41,
+        "omission": 0.2552,
+        "entity_missing": 0.1597,
+        "number_dropped": 0.1106,
+        "too_short": 0.0052,
+        "too_long": 0.0072,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.7376
+      },
+      "tuned": {
+        "weights": {
+          "mbr": 1,
+          "sys_hunyuan-mt-7b": 0.05,
+          "sys_tower-mistral-7b": 0.05,
+          "rule": 0.05,
+          "fwd_cal": 0,
+          "rev_cal": 0.2
+        },
+        "T": null,
+        "aux": [],
+        "guard": true,
+        "tune_chrfpp": 60.933
+      },
+      "picked": {
+        "hunyuan-mt-7b:1best": 626,
+        "qwen2.5-7b:1best": 211,
+        "tower-mistral-7b:1best": 691
+      },
+      "seconds": 774.3,
+      "beats": {
+        "mbr": 1.0,
+        "team_cometkiwi": 0.001
+      }
+    },
+    "prior+kiwi+mbr": {
+      "metrics": {
+        "bleu": 35.35,
+        "chrfpp": 60.42,
+        "comet22": 85.32,
+        "omission": 0.2592,
+        "entity_missing": 0.163,
+        "number_dropped": 0.1145,
+        "too_short": 0.0046,
+        "too_long": 0.0079,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.7336
+      },
+      "tuned": {
+        "weights": {
+          "mbr": 1,
+          "sys_hunyuan-mt-7b": 0.02,
+          "sys_tower-mistral-7b": 0.02,
+          "kiwi": 0.02
+        },
+        "T": null,
+        "aux": [],
+        "guard": true,
+        "tune_chrfpp": 60.772
+      },
+      "picked": {
+        "hunyuan-mt-7b:1best": 702,
+        "qwen2.5-7b:1best": 226,
+        "tower-mistral-7b:1best": 600
+      },
+      "seconds": 88.3,
+      "beats": {
+        "mbr": 0.999,
+        "team_cometkiwi": 0.0
+      }
+    },
+    "prior+kiwi+audit": {
+      "metrics": {
+        "bleu": 35.51,
+        "chrfpp": 60.52,
+        "comet22": 85.39,
+        "omission": 0.2611,
+        "entity_missing": 0.1643,
+        "number_dropped": 0.1132,
+        "too_short": 0.0052,
+        "too_long": 0.0072,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.7317
+      },
+      "tuned": {
+        "weights": {
+          "mbr": 1,
+          "sys_hunyuan-mt-7b": 0.05,
+          "sys_tower-mistral-7b": 0.02,
+          "rule": 0,
+          "fwd_cal": 0,
+          "rev_cal": 0.1,
+          "kiwi": 0.02
+        },
+        "T": null,
+        "aux": [],
+        "guard": true,
+        "tune_chrfpp": 60.918
+      },
+      "picked": {
+        "hunyuan-mt-7b:1best": 877,
+        "qwen2.5-7b:1best": 210,
+        "tower-mistral-7b:1best": 441
+      },
+      "seconds": 1182.7,
+      "beats": {
+        "mbr": 1.0,
+        "team_cometkiwi": 0.0
+      }
+    },
+    "prior+audit(no mbr)": {
+      "metrics": {
+        "bleu": 36.08,
+        "chrfpp": 60.61,
+        "comet22": 85.44,
+        "omission": 0.2644,
+        "entity_missing": 0.1643,
+        "number_dropped": 0.1126,
+        "too_short": 0.0072,
+        "too_long": 0.0085,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.7271
+      },
+      "tuned": {
+        "weights": {
+          "mbr": 0,
+          "sys_hunyuan-mt-7b": 0.5,
+          "sys_tower-mistral-7b": 0.02,
+          "fwd_cal": 0.5,
+          "rev_cal": 1
+        },
+        "T": null,
+        "aux": [],
+        "guard": true,
+        "tune_chrfpp": 60.521
+      },
+      "picked": {
+        "hunyuan-mt-7b:1best": 1170,
+        "qwen2.5-7b:1best": 186,
+        "tower-mistral-7b:1best": 172
+      },
+      "seconds": 166.2,
+      "beats": {
+        "mbr": 1.0,
+        "team_cometkiwi": 0.005
+      }
+    },
+    "oracle": {
+      "metrics": {
+        "bleu": 42.52,
+        "chrfpp": 64.93,
+        "comet22": 86.34,
+        "omission": 0.2513,
+        "entity_missing": 0.1531,
+        "number_dropped": 0.1113,
+        "too_short": 0.0079,
+        "too_long": 0.0072,
+        "untranslated_han": 0.0007,
+        "repetition": 0.0,
+        "clean": 0.7408
+      },
+      "tuned": {},
+      "picked": {
+        "hunyuan-mt-7b:1best": 642,
+        "qwen2.5-7b:1best": 343,
+        "tower-mistral-7b:1best": 543
+      },
+      "seconds": 2.0,
+      "beats": {
+        "mbr": 1.0,
+        "team_cometkiwi": 1.0
+      }
+    }
+  }
+}

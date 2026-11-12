@@ -1,0 +1,63 @@
+{
+  "scores": {
+    "hunyuan-mt-7b": {
+      "bleu": 36.81,
+      "chrfpp": 60.97,
+      "comet22": 85.26,
+      "omission": 0.2717,
+      "han": 0
+    },
+    "qwen2.5-7b": {
+      "bleu": 30.02,
+      "chrfpp": 56.58,
+      "comet22": 84.26,
+      "omission": 0.2958,
+      "han": 2
+    },
+    "tower-mistral-7b": {
+      "bleu": 32.44,
+      "chrfpp": 59.16,
+      "comet22": 84.91,
+      "omission": 0.2671,
+      "han": 0
+    },
+    "cometkiwi": {
+      "bleu": 33.72,
+      "chrfpp": 59.33,
+      "comet22": 85.44,
+      "omission": 0.271,
+      "han": 0
+    },
+    "consensus": {
+      "bleu": 34.16,
+      "chrfpp": 60.13,
+      "comet22": 85.16,
+      "omission": 0.2619,
+      "han": 0
+    },
+    "framework": {
+      "bleu": 36.57,
+      "chrfpp": 60.96,
+      "comet22": 85.31,
+      "omission": 0.2651,
+      "han": 0
+    }
+  },
+  "bootstrap": {
+    "cometkiwi>hunyuan-mt-7b": 0.983,
+    "cometkiwi>qwen2.5-7b": 1.0,
+    "cometkiwi>tower-mistral-7b": 1.0,
+    "cometkiwi>consensus": 1.0,
+    "cometkiwi>framework": 0.949,
+    "framework>hunyuan-mt-7b": 0.901,
+    "framework>qwen2.5-7b": 1.0,
+    "framework>tower-mistral-7b": 1.0,
+    "framework>cometkiwi": 0.051,
+    "framework>consensus": 0.983,
+    "consensus>hunyuan-mt-7b": 0.102,
+    "consensus>qwen2.5-7b": 1.0,
+    "consensus>tower-mistral-7b": 1.0,
+    "consensus>cometkiwi": 0.0,
+    "consensus>framework": 0.017
+  }
+}

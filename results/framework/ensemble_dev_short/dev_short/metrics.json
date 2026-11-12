@@ -1,0 +1,245 @@
+{
+  "dev": "dev_short",
+  "n_tune": 500,
+  "n_eval": 492,
+  "systems": {
+    "hunyuan-mt-7b": "results/candidates/ft.hunyuan-mt-7b.{dev}.txt",
+    "qwen2.5-7b": "results/candidates/ft.qwen2.5-7b.{dev}.txt",
+    "tower-mistral-7b": "results/candidates/ft.tower-mistral-7b.{dev}.txt"
+  },
+  "results": {
+    "hunyuan-mt-7b_only": {
+      "metrics": {
+        "bleu": 41.99,
+        "chrfpp": 61.01,
+        "comet22": 91.18,
+        "omission": 0.0224,
+        "entity_missing": 0.0122,
+        "number_dropped": 0.002,
+        "too_short": 0.0081,
+        "too_long": 0.002,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.9756
+      },
+      "tuned": {},
+      "picked": {
+        "hunyuan-mt-7b:1best": 492
+      },
+      "seconds": 0.1,
+      "beats": {
+        "mbr": 0.591
+      }
+    },
+    "qwen2.5-7b_only": {
+      "metrics": {
+        "bleu": 40.8,
+        "chrfpp": 60.09,
+        "comet22": 90.66,
+        "omission": 0.0285,
+        "entity_missing": 0.0122,
+        "number_dropped": 0.0041,
+        "too_short": 0.0122,
+        "too_long": 0.0041,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.9675
+      },
+      "tuned": {},
+      "picked": {
+        "qwen2.5-7b:1best": 492
+      },
+      "seconds": 12.5,
+      "beats": {
+        "mbr": 0.004
+      }
+    },
+    "tower-mistral-7b_only": {
+      "metrics": {
+        "bleu": 42.65,
+        "chrfpp": 60.63,
+        "comet22": 90.45,
+        "omission": 0.0244,
+        "entity_missing": 0.0102,
+        "number_dropped": 0.0041,
+        "too_short": 0.0102,
+        "too_long": 0.0041,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.9715
+      },
+      "tuned": {},
+      "picked": {
+        "tower-mistral-7b:1best": 492
+      },
+      "seconds": 0.1,
+      "beats": {
+        "mbr": 0.0
+      }
+    },
+    "mbr": {
+      "metrics": {
+        "bleu": 43.51,
+        "chrfpp": 61.96,
+        "comet22": 91.13,
+        "omission": 0.0203,
+        "entity_missing": 0.0102,
+        "number_dropped": 0.0041,
+        "too_short": 0.0061,
+        "too_long": 0.0041,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.9756
+      },
+      "tuned": {
+        "weights": {
+          "mbr": 1
+        },
+        "T": null,
+        "aux": [],
+        "guard": false,
+        "tune_chrfpp": 61.314
+      },
+      "picked": {
+        "hunyuan-mt-7b:1best": 331,
+        "qwen2.5-7b:1best": 99,
+        "tower-mistral-7b:1best": 62
+      },
+      "seconds": 0.2
+    },
+    "prior+mbr": {
+      "metrics": {
+        "bleu": 42.41,
+        "chrfpp": 61.23,
+        "comet22": 91.19,
+        "omission": 0.0183,
+        "entity_missing": 0.0122,
+        "number_dropped": 0.002,
+        "too_short": 0.0041,
+        "too_long": 0.002,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.9797
+      },
+      "tuned": {
+        "weights": {
+          "mbr": 1,
+          "sys_hunyuan-mt-7b": 0.2,
+          "sys_tower-mistral-7b": 0.05
+        },
+        "T": null,
+        "aux": [],
+        "guard": true,
+        "tune_chrfpp": 61.765
+      },
+      "picked": {
+        "hunyuan-mt-7b:1best": 447,
+        "qwen2.5-7b:1best": 2,
+        "tower-mistral-7b:1best": 43
+      },
+      "seconds": 1.9,
+      "beats": {
+        "mbr": 0.643
+      }
+    },
+    "prior+mbr+rev": {
+      "metrics": {
+        "bleu": 43.34,
+        "chrfpp": 61.79,
+        "comet22": 91.37,
+        "omission": 0.0203,
+        "entity_missing": 0.0122,
+        "number_dropped": 0.002,
+        "too_short": 0.0061,
+        "too_long": 0.002,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.9776
+      },
+      "tuned": {
+        "weights": {
+          "mbr": 1,
+          "sys_hunyuan-mt-7b": 0.2,
+          "sys_tower-mistral-7b": 0.02,
+          "rev_cal": 0.5
+        },
+        "T": null,
+        "aux": [],
+        "guard": true,
+        "tune_chrfpp": 62.917
+      },
+      "picked": {
+        "hunyuan-mt-7b:1best": 410,
+        "qwen2.5-7b:1best": 32,
+        "tower-mistral-7b:1best": 50
+      },
+      "seconds": 8.7,
+      "beats": {
+        "mbr": 0.936
+      }
+    },
+    "prior+audit": {
+      "metrics": {
+        "bleu": 43.64,
+        "chrfpp": 62.06,
+        "comet22": 91.43,
+        "omission": 0.0183,
+        "entity_missing": 0.0102,
+        "number_dropped": 0.002,
+        "too_short": 0.0061,
+        "too_long": 0.002,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.9797
+      },
+      "tuned": {
+        "weights": {
+          "mbr": 1,
+          "sys_hunyuan-mt-7b": 0.2,
+          "sys_tower-mistral-7b": 0.02,
+          "rule": 0,
+          "fwd_cal": 0.05,
+          "rev_cal": 0.5
+        },
+        "T": null,
+        "aux": [],
+        "guard": true,
+        "tune_chrfpp": 62.966
+      },
+      "picked": {
+        "hunyuan-mt-7b:1best": 407,
+        "qwen2.5-7b:1best": 31,
+        "tower-mistral-7b:1best": 54
+      },
+      "seconds": 82.7,
+      "beats": {
+        "mbr": 0.972
+      }
+    },
+    "oracle": {
+      "metrics": {
+        "bleu": 52.29,
+        "chrfpp": 68.6,
+        "comet22": 92.57,
+        "omission": 0.0163,
+        "entity_missing": 0.0081,
+        "number_dropped": 0.0041,
+        "too_short": 0.0041,
+        "too_long": 0.0061,
+        "untranslated_han": 0.0,
+        "repetition": 0.0,
+        "clean": 0.9776
+      },
+      "tuned": {},
+      "picked": {
+        "hunyuan-mt-7b:1best": 298,
+        "qwen2.5-7b:1best": 112,
+        "tower-mistral-7b:1best": 82
+      },
+      "seconds": 0.3,
+      "beats": {
+        "mbr": 1.0
+      }
+    }
+  }
+}

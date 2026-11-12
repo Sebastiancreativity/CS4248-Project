@@ -1,0 +1,178 @@
+{
+  "dev": "dev_wmt",
+  "n_eval": 498,
+  "detection": {
+    "fwd": {
+      "omission": {
+        "auroc": 0.5588,
+        "base": 0.2651,
+        "precision": 0.3061,
+        "lift": 1.15
+      },
+      "entity_missing": {
+        "auroc": 0.5511,
+        "base": 0.1667,
+        "precision": 0.2245,
+        "lift": 1.35
+      },
+      "number_dropped": {
+        "auroc": 0.5121,
+        "base": 0.1165,
+        "precision": 0.0816,
+        "lift": 0.7
+      },
+      "low_comet_20pct": {
+        "auroc": 0.786,
+        "base": 0.2008,
+        "precision": 0.6327,
+        "lift": 3.15
+      }
+    },
+    "fwd_opus": {
+      "omission": {
+        "auroc": 0.5732,
+        "base": 0.2651,
+        "precision": 0.3469,
+        "lift": 1.31
+      },
+      "entity_missing": {
+        "auroc": 0.5678,
+        "base": 0.1667,
+        "precision": 0.2245,
+        "lift": 1.35
+      },
+      "number_dropped": {
+        "auroc": 0.5439,
+        "base": 0.1165,
+        "precision": 0.0816,
+        "lift": 0.7
+      },
+      "low_comet_20pct": {
+        "auroc": 0.7187,
+        "base": 0.2008,
+        "precision": 0.5306,
+        "lift": 2.64
+      }
+    },
+    "rev": {
+      "omission": {
+        "auroc": 0.5572,
+        "base": 0.2651,
+        "precision": 0.4286,
+        "lift": 1.62
+      },
+      "entity_missing": {
+        "auroc": 0.5191,
+        "base": 0.1667,
+        "precision": 0.2245,
+        "lift": 1.35
+      },
+      "number_dropped": {
+        "auroc": 0.5462,
+        "base": 0.1165,
+        "precision": 0.1224,
+        "lift": 1.05
+      },
+      "low_comet_20pct": {
+        "auroc": 0.7075,
+        "base": 0.2008,
+        "precision": 0.4694,
+        "lift": 2.34
+      }
+    },
+    "coverage": {
+      "omission": {
+        "auroc": 0.4974,
+        "base": 0.2651,
+        "precision": 0.2041,
+        "lift": 0.77
+      },
+      "entity_missing": {
+        "auroc": 0.4582,
+        "base": 0.1667,
+        "precision": 0.0612,
+        "lift": 0.37
+      },
+      "number_dropped": {
+        "auroc": 0.4937,
+        "base": 0.1165,
+        "precision": 0.0612,
+        "lift": 0.53
+      },
+      "low_comet_20pct": {
+        "auroc": 0.5066,
+        "base": 0.2008,
+        "precision": 0.2245,
+        "lift": 1.12
+      }
+    }
+  },
+  "coverage_triggers": {
+    "0.05": {
+      "rate": 0.0,
+      "precision_omission": 0.0,
+      "base_omission": 0.2651
+    },
+    "0.1": {
+      "rate": 0.006,
+      "precision_omission": 0.6667,
+      "base_omission": 0.2651
+    },
+    "0.2": {
+      "rate": 0.0542,
+      "precision_omission": 0.3704,
+      "base_omission": 0.2651
+    },
+    "0.3": {
+      "rate": 0.1787,
+      "precision_omission": 0.3258,
+      "base_omission": 0.2651
+    }
+  },
+  "injection": {
+    "span_deletion": {
+      "n": 404,
+      "fwd": 0.9851,
+      "fwd_opus": 0.9629,
+      "rev": 0.9752,
+      "coverage": 0.995,
+      "example": {
+        "orig": "Nanjing real estate market sees \"difference compensation\" again - CNTV",
+        "damaged": "Nanjing real estate compensation\" again - CNTV"
+      }
+    },
+    "name_swap": {
+      "n": 228,
+      "fwd": 0.9956,
+      "fwd_opus": 0.9781,
+      "rev": 0.9649,
+      "coverage": 0.3706,
+      "example": {
+        "orig": "XINHUA DAILY PRESS OF YANGZI NEWS (Reporter Ma Zhubo) reported on Monday that after being absent for over a decade, \"price protection agreements\" have returned to the Nanjing real estate market. A property in the New District of Jiangbei claimed to offer \"difference compensation,\" stating that the discounts on other properties before handover were greater than previous discounts, and the developer was willing to exchange houses for buyers and refund the difference.",
+        "damaged": "XINHUA DAILY PRESS OF YANGZI NEWS (Oman Ma Zhubo) reported on Monday that after being absent for over a decade, \"price protection agreements\" have returned to the Nanjing real estate market. A property in the New District of Jiangbei claimed to offer \"difference compensation,\" stating that the discounts on other properties before handover were greater than previous discounts, and the developer was willing to exchange houses for buyers and refund the difference."
+      }
+    },
+    "number_change": {
+      "n": 88,
+      "fwd": 0.9886,
+      "fwd_opus": 0.9886,
+      "rev": 1.0,
+      "coverage": 0.3011,
+      "example": {
+        "orig": "The pictures sent to the journalists show that the developer of the楼盘 has promised that anyone who purchases a property unit between February 1st and February 28th will be eligible for a swap and receive a refund of the difference in price if other unsold properties within the project offer greater discounts than those they received when purchasing their unit (limited to other units of the same户型, in the same栋, in the same单元, and of the same物业类型 that have not been sold). This can be done from the date of signing the sales contract until the corresponding property is delivered.",
+        "damaged": "The pictures sent to the journalists show that the developer of the楼盘 has promised that anyone who purchases a property unit between February 1st and February 30th will be eligible for a swap and receive a refund of the difference in price if other unsold properties within the project offer greater discounts than those they received when purchasing their unit (limited to other units of the same户型, in the same栋, in the same单元, and of the same物业类型 that have not been sold). This can be done from the date of signing the sales contract until the corresponding property is delivered."
+      }
+    },
+    "phrase_insertion": {
+      "n": 404,
+      "fwd": 1.0,
+      "fwd_opus": 1.0,
+      "rev": 0.9678,
+      "coverage": 0.0099,
+      "example": {
+        "orig": "Nanjing real estate market sees \"difference compensation\" again - CNTV",
+        "damaged": "Nanjing real estate market sees current and future period, and \"difference compensation\" again - CNTV"
+      }
+    }
+  }
+}

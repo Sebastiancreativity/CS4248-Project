@@ -1,0 +1,163 @@
+{
+  "name": "ensemble_dev_short",
+  "dev": [
+    "dev_short"
+  ],
+  "systems": {
+    "hunyuan-mt-7b": "results/candidates/ft.hunyuan-mt-7b.{dev}.txt",
+    "qwen2.5-7b": "results/candidates/ft.qwen2.5-7b.{dev}.txt",
+    "tower-mistral-7b": "results/candidates/ft.tower-mistral-7b.{dev}.txt"
+  },
+  "scorers": {
+    "opus_fwd": {
+      "type": "likelihood",
+      "name": "opusmt.zh-en.fwd",
+      "model": "Helsinki-NLP/opus-mt-zh-en",
+      "batch_size": 32
+    },
+    "opus_rev": {
+      "type": "likelihood",
+      "name": "opusmt.en-zh.rev",
+      "model": "Helsinki-NLP/opus-mt-en-zh",
+      "reverse": true,
+      "prefix": ">>cmn_Hans<< ",
+      "batch_size": 32
+    }
+  },
+  "features": {
+    "fwd": "opus_fwd",
+    "rev": "opus_rev"
+  },
+  "calibrate": {
+    "fwd_cal": "fwd",
+    "rev_cal": "rev"
+  },
+  "methods": [
+    {
+      "name": "hunyuan-mt-7b_only",
+      "type": "system",
+      "system": "hunyuan-mt-7b"
+    },
+    {
+      "name": "qwen2.5-7b_only",
+      "type": "system",
+      "system": "qwen2.5-7b"
+    },
+    {
+      "name": "tower-mistral-7b_only",
+      "type": "system",
+      "system": "tower-mistral-7b"
+    },
+    {
+      "name": "mbr",
+      "guard": false,
+      "grid": {
+        "mbr": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "prior+mbr",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "sys_hunyuan-mt-7b": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ],
+        "sys_tower-mistral-7b": [
+          0,
+          0.02,
+          0.05,
+          0.1
+        ]
+      }
+    },
+    {
+      "name": "prior+mbr+rev",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "sys_hunyuan-mt-7b": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ],
+        "sys_tower-mistral-7b": [
+          0,
+          0.02,
+          0.05,
+          0.1
+        ],
+        "rev_cal": [
+          0,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "prior+audit",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "sys_hunyuan-mt-7b": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ],
+        "sys_tower-mistral-7b": [
+          0,
+          0.02,
+          0.05,
+          0.1
+        ],
+        "rule": [
+          0,
+          0.05
+        ],
+        "fwd_cal": [
+          0,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ],
+        "rev_cal": [
+          0,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "oracle",
+      "type": "oracle"
+    }
+  ],
+  "system_priors": [
+    "hunyuan-mt-7b",
+    "tower-mistral-7b"
+  ]
+}

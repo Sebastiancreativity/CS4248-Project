@@ -1,0 +1,107 @@
+{
+  "name": "ensemble_consensus",
+  "method": {
+    "name": "mbr",
+    "guard": false,
+    "grid": {
+      "mbr": [
+        1
+      ]
+    }
+  },
+  "targets": {
+    "wmt22": {
+      "dev": [
+        "dev_train20"
+      ],
+      "n_dev": 3068,
+      "n_test": 1875,
+      "weights": {
+        "mbr": 1
+      },
+      "dev_chrfpp": 60.39,
+      "systems": [
+        "hunyuan-mt-7b",
+        "qwen2.5-7b",
+        "tower-mistral-7b"
+      ],
+      "picked": {
+        "hunyuan-mt-7b:1best": 769,
+        "qwen2.5-7b:1best": 506,
+        "tower-mistral-7b:1best": 600
+      },
+      "chosen_with_hard_tag": 4,
+      "fallback_added": 0,
+      "out": "D:\\NUS Class\\CS4248 Project\\official\\results\\submission\\final_v2_consensus\\wmt22.en",
+      "test_scored_once": {
+        "bleu": 29.42,
+        "chrfpp": 56.85,
+        "comet22": 82.54,
+        "first_candidate": {
+          "bleu": 28.4,
+          "comet22": 81.91
+        }
+      },
+      "seconds": 30.8
+    },
+    "tatoeba": {
+      "dev": [
+        "dev_short"
+      ],
+      "n_dev": 992,
+      "n_test": 469,
+      "weights": {
+        "mbr": 1
+      },
+      "dev_chrfpp": 61.643,
+      "systems": [
+        "hunyuan-mt-7b",
+        "qwen2.5-7b",
+        "tower-mistral-7b"
+      ],
+      "picked": {
+        "hunyuan-mt-7b:1best": 334,
+        "qwen2.5-7b:1best": 96,
+        "tower-mistral-7b:1best": 39
+      },
+      "chosen_with_hard_tag": 1,
+      "fallback_added": 0,
+      "out": "D:\\NUS Class\\CS4248 Project\\official\\results\\submission\\final_v2_consensus\\tatoeba.en",
+      "seconds": 1.7
+    },
+    "internal": {
+      "dev": [
+        "dev_train20"
+      ],
+      "n_dev": 3068,
+      "n_test": 1535,
+      "weights": {
+        "mbr": 1
+      },
+      "dev_chrfpp": 60.39,
+      "systems": [
+        "hunyuan-mt-7b",
+        "qwen2.5-7b",
+        "tower-mistral-7b"
+      ],
+      "picked": {
+        "hunyuan-mt-7b:1best": 627,
+        "qwen2.5-7b:1best": 412,
+        "tower-mistral-7b:1best": 496
+      },
+      "chosen_with_hard_tag": 0,
+      "fallback_added": 0,
+      "out": "D:\\NUS Class\\CS4248 Project\\official\\results\\submission\\internal_v2_consensus\\internal.en",
+      "test_scored_once": {
+        "bleu": 34.16,
+        "chrfpp": 60.13,
+        "comet22": 85.16,
+        "first_candidate": {
+          "bleu": 36.81,
+          "comet22": 85.26
+        }
+      },
+      "seconds": 68.9
+    }
+  }
+}

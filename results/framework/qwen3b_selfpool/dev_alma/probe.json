@@ -1,0 +1,178 @@
+{
+  "dev": "dev_alma",
+  "n_eval": 520,
+  "detection": {
+    "fwd": {
+      "omission": {
+        "auroc": 0.5681,
+        "base": 0.2769,
+        "precision": 0.3077,
+        "lift": 1.11
+      },
+      "entity_missing": {
+        "auroc": 0.574,
+        "base": 0.2346,
+        "precision": 0.2692,
+        "lift": 1.15
+      },
+      "number_dropped": {
+        "auroc": 0.5178,
+        "base": 0.05,
+        "precision": 0.0385,
+        "lift": 0.77
+      },
+      "low_comet_20pct": {
+        "auroc": 0.726,
+        "base": 0.2,
+        "precision": 0.5192,
+        "lift": 2.6
+      }
+    },
+    "fwd_opus": {
+      "omission": {
+        "auroc": 0.6479,
+        "base": 0.2769,
+        "precision": 0.5385,
+        "lift": 1.94
+      },
+      "entity_missing": {
+        "auroc": 0.6356,
+        "base": 0.2346,
+        "precision": 0.4808,
+        "lift": 2.05
+      },
+      "number_dropped": {
+        "auroc": 0.6515,
+        "base": 0.05,
+        "precision": 0.0577,
+        "lift": 1.15
+      },
+      "low_comet_20pct": {
+        "auroc": 0.8024,
+        "base": 0.2,
+        "precision": 0.5962,
+        "lift": 2.98
+      }
+    },
+    "rev": {
+      "omission": {
+        "auroc": 0.6315,
+        "base": 0.2769,
+        "precision": 0.5769,
+        "lift": 2.08
+      },
+      "entity_missing": {
+        "auroc": 0.6322,
+        "base": 0.2346,
+        "precision": 0.5192,
+        "lift": 2.21
+      },
+      "number_dropped": {
+        "auroc": 0.5916,
+        "base": 0.05,
+        "precision": 0.0962,
+        "lift": 1.92
+      },
+      "low_comet_20pct": {
+        "auroc": 0.7693,
+        "base": 0.2,
+        "precision": 0.5385,
+        "lift": 2.69
+      }
+    },
+    "coverage": {
+      "omission": {
+        "auroc": 0.6129,
+        "base": 0.2769,
+        "precision": 0.4423,
+        "lift": 1.6
+      },
+      "entity_missing": {
+        "auroc": 0.5494,
+        "base": 0.2346,
+        "precision": 0.2308,
+        "lift": 0.98
+      },
+      "number_dropped": {
+        "auroc": 0.8248,
+        "base": 0.05,
+        "precision": 0.2308,
+        "lift": 4.62
+      },
+      "low_comet_20pct": {
+        "auroc": 0.4409,
+        "base": 0.2,
+        "precision": 0.0962,
+        "lift": 0.48
+      }
+    }
+  },
+  "coverage_triggers": {
+    "0.05": {
+      "rate": 0.0019,
+      "precision_omission": 1.0,
+      "base_omission": 0.2769
+    },
+    "0.1": {
+      "rate": 0.0154,
+      "precision_omission": 0.375,
+      "base_omission": 0.2769
+    },
+    "0.2": {
+      "rate": 0.0885,
+      "precision_omission": 0.413,
+      "base_omission": 0.2769
+    },
+    "0.3": {
+      "rate": 0.2731,
+      "precision_omission": 0.338,
+      "base_omission": 0.2769
+    }
+  },
+  "injection": {
+    "span_deletion": {
+      "n": 509,
+      "fwd": 0.9902,
+      "fwd_opus": 0.9823,
+      "rev": 0.998,
+      "coverage": 0.998,
+      "example": {
+        "orig": "Dominic Raab: The government cannot apologize for its decision to isolate Spain.",
+        "damaged": "Dominic Raab: The government decision to isolate Spain."
+      }
+    },
+    "name_swap": {
+      "n": 378,
+      "fwd": 1.0,
+      "fwd_opus": 0.9894,
+      "rev": 0.9841,
+      "coverage": 0.4074,
+      "example": {
+        "orig": "Dominic Raab: The government cannot apologize for its decision to isolate Spain.",
+        "damaged": "Dominic Juventus: The government cannot apologize for its decision to isolate Spain."
+      }
+    },
+    "number_change": {
+      "n": 112,
+      "fwd": 1.0,
+      "fwd_opus": 0.9911,
+      "rev": 1.0,
+      "coverage": 0.25,
+      "example": {
+        "orig": "The ministers announced on Saturday that those who fail to return to Spain and its islands before midnight will be required to self-isolate for 14 days.",
+        "damaged": "The ministers announced on Saturday that those who fail to return to Spain and its islands before midnight will be required to self-isolate for 15 days."
+      }
+    },
+    "phrase_insertion": {
+      "n": 509,
+      "fwd": 1.0,
+      "fwd_opus": 0.998,
+      "rev": 0.9705,
+      "coverage": 0.002,
+      "example": {
+        "orig": "Dominic Raab: The government cannot apologize for its decision to isolate Spain.",
+        "damaged": "Dominic Raab: The government cannot apologize using the White House lectern for its decision to isolate Spain."
+      }
+    }
+  }
+}

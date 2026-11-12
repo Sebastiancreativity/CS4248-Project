@@ -1,0 +1,98 @@
+{
+  "name": "ensemble_consensus",
+  "scorers": {
+    "opus_fwd": {
+      "type": "likelihood",
+      "name": "opusmt.zh-en.fwd",
+      "model": "Helsinki-NLP/opus-mt-zh-en",
+      "batch_size": 32
+    },
+    "opus_rev": {
+      "type": "likelihood",
+      "name": "opusmt.en-zh.rev",
+      "model": "Helsinki-NLP/opus-mt-en-zh",
+      "reverse": true,
+      "prefix": ">>cmn_Hans<< ",
+      "batch_size": 32
+    }
+  },
+  "features": {
+    "fwd": "opus_fwd",
+    "rev": "opus_rev"
+  },
+  "calibrate": {
+    "fwd_cal": "fwd",
+    "rev_cal": "rev"
+  },
+  "system_priors": [
+    "hunyuan-mt-7b",
+    "tower-mistral-7b"
+  ],
+  "method": {
+    "name": "mbr",
+    "guard": false,
+    "grid": {
+      "mbr": [
+        1
+      ]
+    }
+  },
+  "targets": [
+    {
+      "name": "wmt22",
+      "tune_dev": [
+        "dev_train20"
+      ],
+      "dev_systems": {
+        "hunyuan-mt-7b": "results/candidates/ft.hunyuan-mt-7b.{dev}.txt",
+        "qwen2.5-7b": "results/candidates/ft.qwen2.5-7b.{dev}.txt",
+        "tower-mistral-7b": "results/candidates/ft.tower-mistral-7b.{dev}.txt"
+      },
+      "test_src": "data/test/wmttest2022.zh",
+      "test_systems": {
+        "hunyuan-mt-7b": "results/candidates/ft.hunyuan-mt-7b.test_wmt22.txt",
+        "qwen2.5-7b": "results/candidates/ft.qwen2.5-7b.test_wmt22.txt",
+        "tower-mistral-7b": "results/candidates/ft.tower-mistral-7b.test_wmt22.txt"
+      },
+      "test_ref": "data/test/wmttest2022.AnnA.en",
+      "out": "wmt22.en"
+    },
+    {
+      "name": "tatoeba",
+      "tune_dev": [
+        "dev_short"
+      ],
+      "dev_systems": {
+        "hunyuan-mt-7b": "results/candidates/ft.hunyuan-mt-7b.{dev}.txt",
+        "qwen2.5-7b": "results/candidates/ft.qwen2.5-7b.{dev}.txt",
+        "tower-mistral-7b": "results/candidates/ft.tower-mistral-7b.{dev}.txt"
+      },
+      "test_src": "data/test/tatoeba.zh",
+      "test_systems": {
+        "hunyuan-mt-7b": "results/candidates/ft.hunyuan-mt-7b.test_tatoeba.txt",
+        "qwen2.5-7b": "results/candidates/ft.qwen2.5-7b.test_tatoeba.txt",
+        "tower-mistral-7b": "results/candidates/ft.tower-mistral-7b.test_tatoeba.txt"
+      },
+      "out": "tatoeba.en"
+    },
+    {
+      "name": "internal",
+      "tune_dev": [
+        "dev_train20"
+      ],
+      "dev_systems": {
+        "hunyuan-mt-7b": "results/candidates/ft.hunyuan-mt-7b.{dev}.txt",
+        "qwen2.5-7b": "results/candidates/ft.qwen2.5-7b.{dev}.txt",
+        "tower-mistral-7b": "results/candidates/ft.tower-mistral-7b.{dev}.txt"
+      },
+      "test_src": "data/test/test_train10.zh",
+      "test_systems": {
+        "hunyuan-mt-7b": "results/candidates/ft.hunyuan-mt-7b.test_train10.txt",
+        "qwen2.5-7b": "results/candidates/ft.qwen2.5-7b.test_train10.txt",
+        "tower-mistral-7b": "results/candidates/ft.tower-mistral-7b.test_train10.txt"
+      },
+      "test_ref": "data/test/test_train10.en",
+      "out": "internal.en"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "model": "qwen2.5-3b",
+  "dev": "dev_wmt",
+  "n_samples": 4,
+  "epsilon": 0.02,
+  "seed": 4248,
+  "seconds": 345.9,
+  "sent_per_s": 2.99
+}

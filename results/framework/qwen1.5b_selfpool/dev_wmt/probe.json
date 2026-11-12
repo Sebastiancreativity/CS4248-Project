@@ -1,0 +1,178 @@
+{
+  "dev": "dev_wmt",
+  "n_eval": 498,
+  "detection": {
+    "fwd": {
+      "omission": {
+        "auroc": 0.5774,
+        "base": 0.2691,
+        "precision": 0.2245,
+        "lift": 0.83
+      },
+      "entity_missing": {
+        "auroc": 0.5831,
+        "base": 0.1908,
+        "precision": 0.1429,
+        "lift": 0.75
+      },
+      "number_dropped": {
+        "auroc": 0.5417,
+        "base": 0.1104,
+        "precision": 0.1224,
+        "lift": 1.11
+      },
+      "low_comet_20pct": {
+        "auroc": 0.7875,
+        "base": 0.2008,
+        "precision": 0.5918,
+        "lift": 2.95
+      }
+    },
+    "fwd_opus": {
+      "omission": {
+        "auroc": 0.6192,
+        "base": 0.2691,
+        "precision": 0.4286,
+        "lift": 1.59
+      },
+      "entity_missing": {
+        "auroc": 0.6254,
+        "base": 0.1908,
+        "precision": 0.3265,
+        "lift": 1.71
+      },
+      "number_dropped": {
+        "auroc": 0.5927,
+        "base": 0.1104,
+        "precision": 0.102,
+        "lift": 0.92
+      },
+      "low_comet_20pct": {
+        "auroc": 0.7326,
+        "base": 0.2008,
+        "precision": 0.4694,
+        "lift": 2.34
+      }
+    },
+    "rev": {
+      "omission": {
+        "auroc": 0.5867,
+        "base": 0.2691,
+        "precision": 0.4082,
+        "lift": 1.52
+      },
+      "entity_missing": {
+        "auroc": 0.5604,
+        "base": 0.1908,
+        "precision": 0.2653,
+        "lift": 1.39
+      },
+      "number_dropped": {
+        "auroc": 0.5926,
+        "base": 0.1104,
+        "precision": 0.1837,
+        "lift": 1.66
+      },
+      "low_comet_20pct": {
+        "auroc": 0.7562,
+        "base": 0.2008,
+        "precision": 0.551,
+        "lift": 2.74
+      }
+    },
+    "coverage": {
+      "omission": {
+        "auroc": 0.5098,
+        "base": 0.2691,
+        "precision": 0.2245,
+        "lift": 0.83
+      },
+      "entity_missing": {
+        "auroc": 0.4818,
+        "base": 0.1908,
+        "precision": 0.102,
+        "lift": 0.53
+      },
+      "number_dropped": {
+        "auroc": 0.5427,
+        "base": 0.1104,
+        "precision": 0.1429,
+        "lift": 1.29
+      },
+      "low_comet_20pct": {
+        "auroc": 0.4947,
+        "base": 0.2008,
+        "precision": 0.2653,
+        "lift": 1.32
+      }
+    }
+  },
+  "coverage_triggers": {
+    "0.05": {
+      "rate": 0.002,
+      "precision_omission": 1.0,
+      "base_omission": 0.2691
+    },
+    "0.1": {
+      "rate": 0.0161,
+      "precision_omission": 0.625,
+      "base_omission": 0.2691
+    },
+    "0.2": {
+      "rate": 0.0803,
+      "precision_omission": 0.5,
+      "base_omission": 0.2691
+    },
+    "0.3": {
+      "rate": 0.2229,
+      "precision_omission": 0.3694,
+      "base_omission": 0.2691
+    }
+  },
+  "injection": {
+    "span_deletion": {
+      "n": 406,
+      "fwd": 0.968,
+      "fwd_opus": 0.9606,
+      "rev": 0.9951,
+      "coverage": 0.9975,
+      "example": {
+        "orig": "Nanjing Real Estate Market Revisits \"Price Difference Compensation\" - China Daily",
+        "damaged": "Nanjing Real Estate Market Compensation\" - China Daily"
+      }
+    },
+    "name_swap": {
+      "n": 234,
+      "fwd": 0.9786,
+      "fwd_opus": 0.9444,
+      "rev": 0.953,
+      "coverage": 0.3739,
+      "example": {
+        "orig": "Nanjing Real Estate Market Revisits \"Price Difference Compensation\" - China Daily",
+        "damaged": "Nanjing Nanchang \"Price Difference Compensation\" - China Daily"
+      }
+    },
+    "number_change": {
+      "n": 91,
+      "fwd": 1.0,
+      "fwd_opus": 1.0,
+      "rev": 0.956,
+      "coverage": 0.3352,
+      "example": {
+        "orig": "The developer of this project promised that if buyers purchase units between February 1 and February 28, they will be entitled to exchange their purchased units for other units at a discount, provided that these other units have better discounts than those offered when they bought their current units (provided that all the units belong to the same floor plan, the same building, the same unit, and the same property type).",
+        "damaged": "The developer of this project promised that if buyers purchase units between February 1 and February 26, they will be entitled to exchange their purchased units for other units at a discount, provided that these other units have better discounts than those offered when they bought their current units (provided that all the units belong to the same floor plan, the same building, the same unit, and the same property type)."
+      }
+    },
+    "phrase_insertion": {
+      "n": 406,
+      "fwd": 1.0,
+      "fwd_opus": 1.0,
+      "rev": 0.9704,
+      "coverage": 0.0062,
+      "example": {
+        "orig": "Nanjing Real Estate Market Revisits \"Price Difference Compensation\" - China Daily",
+        "damaged": "Nanjing Real Estate Market Revisits strengthen his abilities and work \"Price Difference Compensation\" - China Daily"
+      }
+    }
+  }
+}

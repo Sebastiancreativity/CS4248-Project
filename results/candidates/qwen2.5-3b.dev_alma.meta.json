@@ -1,0 +1,9 @@
+{
+  "model": "qwen2.5-3b",
+  "dev": "dev_alma",
+  "n_samples": 4,
+  "epsilon": 0.02,
+  "seed": 4248,
+  "seconds": 311.6,
+  "sent_per_s": 3.22
+}

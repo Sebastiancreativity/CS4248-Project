@@ -1,0 +1,251 @@
+\documentclass[11pt]{article}
+
+% Change "review" to "final" to generate the final (sometimes called camera-ready) version.
+% Change to "preprint" to generate a non-anonymous version with page numbers.
+\usepackage[review]{acl}
+
+% Standard package includes
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{amsmath}
+
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+% For Vietnamese characters
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
+
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
+
+% This is not strictly necessary, and may be commented out,
+% but it will improve the layout of the manuscript,
+% and will typically save some space.
+\usepackage{microtype}
+
+% This is also not strictly necessary, and may be commented out.
+% However, it will improve the aesthetics of text in
+% the typewriter font.
+\usepackage{inconsolata}
+
+%Including images in your LaTeX document requires adding
+%additional package(s)
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+\title{An Ensemble-Based Approach to Machine Translation}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study sentence-level selection among Chinese-to-English translations from several large language models (LLMs). Six pretrained LLMs are adapted with QLoRA, and 120 configurations, each pairing three models with one of three reference-free selectors, are compared on development data. Alongside these selectors we build a model-independent auditing framework in which small encoder--decoder models score each candidate by forced decoding in both translation directions. Controlled error injection shows that forward likelihood detects added content, reverse likelihood detects omitted content, and attention coverage detects deletions only. The final ensemble of fine-tuned Hunyuan-MT-7B, Qwen2.5-7B and TowerInstruct-Mistral-7B with COMETKiwi selection is the best system by COMET-22 on an internal held-out split (85.44) and on WMT22 (83.01, 0.37 above its best member). The framework improves pools sampled from one model by 0.3--0.5 COMET-22, but on the ensemble its learned system priors do not transfer across domains.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+Chinese-to-English translation must preserve the meaning of the source while producing fluent English. Current LLMs are fluent; their errors are mostly errors of information: a name rendered as a different person, a dropped number or clause, or Chinese left in the output. Different models make different errors, so choosing among their outputs sentence by sentence may beat any single model.
+
+We study this in two parts. First, we fine-tune six LLMs and compare ensembles of three models under three reference-free selectors (Section~\ref{subsec:ensemble}). Second, we build an auditing framework in which small encoder--decoder translation models check every candidate against the source in both directions (Section~\ref{subsec:encoder}). The framework reads only text, so it applies to any candidate pool. Using controlled error injection we show which signal detects which error, and we evaluate both kinds of selector on the same final ensemble.
+
+\section{Related Work}
+\label{sec:related_work}
+Minimum Bayes risk (MBR) decoding selects the candidate with the highest expected utility against the other candidates \citep{freitag-etal-2022-high}. Neural utilities raise related metrics more than quality \citep{kovacs-etal-2024-mitigating}, and COMET is insensitive to errors in numbers and names \citep{amrhein-sennrich-2022-identifying}, so our consensus uses chrF++ \citep{popovic-2017-chrf}. Noisy-channel reranking scores how well the source can be reconstructed from a candidate \citep{yee-etal-2019-simple}; our reverse score is such a channel model, computed by a model independent of the generators. LLM-Blender ranks and fuses the outputs of several LLMs \citep{jiang-etal-2023-llm}. Coverage was introduced against under-translation \citep{tu-etal-2016-modeling}, omissions have been detected without references by contrastive conditioning \citep{vamvas-sennrich-2022-little}, and whether attention explains model behaviour is debated \citep{jain-wallace-2019-attention}; we test only the narrower claim that low coverage predicts deleted spans.
+
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{System Architecture}
+\label{subsec:system_architecture}
+Generation and selection communicate only through text. Translation models produce candidates for every source sentence (Section~\ref{subsec:ensemble}); a selector then chooses one without access to the reference. Every selection feature depends only on the pair (source, candidate), so selection is independent of the generating model, scores are cached by content, and a new model joins the pool by adding one file. We compare the ensemble selectors with the auditing framework on the same final pool.
+
+\subsection{Encoder--Decoder Auditing Framework}
+\label{subsec:encoder}
+For a source $x$ with candidates $Y(x)=\{y_1,\dots,y_n\}$, the framework combines a rule guard, a consensus score and two likelihood scores linearly.
+
+\paragraph{Rule guard.}
+A candidate receives a \emph{hard} tag if it is empty, contains Chinese characters, repeats itself (4-gram repetition above 30\%), or begins with meta text such as ``Here is the translation''. Hard-tagged candidates are excluded unless every candidate is tagged. \emph{Soft} tags (a source number or Latin-script string missing from the candidate, or a length ratio outside the 1--99\% range of the development references) add a penalty $r(y)$.
+
+\paragraph{Consensus.}
+Each candidate is scored by its mean chrF++ against the others,
+\begin{equation}
+M(y_i)=\frac{1}{n-1}\sum_{j\ne i}\operatorname{chrF++}(y_i,y_j),
+\label{eq:consensus}
+\end{equation}
+which is MBR with a chrF++ utility.
+
+\paragraph{Bidirectional likelihood.}
+Two encoder--decoder models that do not generate candidates score each candidate by forced decoding, a Chinese-to-English model $A$ and an English-to-Chinese model $B$:
+\begin{align*}
+s_f(y)&=\tfrac{1}{|y|}\textstyle\sum_{t}\log p_A(y_t\mid y_{<t},x),\\
+s_r(y)&=\tfrac{1}{|x|}\textstyle\sum_{j}\log p_B(x_j\mid x_{<j},y).
+\end{align*}
+The forward score asks whether every target token is supported by the source, so an added phrase or a changed number lowers it. The reverse score asks whether the source can be reconstructed, so an omitted span lowers it. Because it scores the same $x$ for every candidate, the reverse score has no length bias.
+
+\paragraph{Selection.}
+The output maximises, over candidates not excluded by the guard,
+\[
+S(y)=M(y)+w_f s_f(y)+w_r s_r(y)-w_p r(y)+\textstyle\sum_k w_k[\mathrm{sys}(y)=k].
+\]
+The last term is a system prior, which matters when each model contributes one candidate and consensus would weigh a weak model's vote like a strong one's. Weights are grid-searched over $\{0,0.02,0.05,0.1,0.2,0.5\}$ to maximise corpus chrF++ on development data; COMET is never used for tuning or selection. In pools that mix model families, each likelihood score is calibrated by subtracting its per-system mean on the tuning data, which removes an auditor's preference for its own family.
+
+\paragraph{Coverage.}
+Forced decoding also yields cross-attention $a_{tj}$, and the coverage of source token $j$ is $c_j=\sum_t a_{tj}$. Spans with $c_j<0.1$ are reported as possible omissions and can trigger one targeted rewrite that joins the pool as an extra candidate (Appendix~\ref{sec:appendix}). Coverage is not part of $S(y)$.
+
+\subsection{Multi-Decoder Ensemble}
+\label{subsec:ensemble}
+For each source sentence, three models each produce a translation and a selector chooses one existing translation; model parameters and sentence fragments are never combined.
+
+\paragraph{Models and adaptation.}
+The pool has six pretrained LLMs: Qwen2.5-1.5B-, 3B- and 7B-Instruct, Hunyuan-MT-7B, TowerInstruct-7B-v0.2 and TowerInstruct-Mistral-7B-v0.2, from which we evaluate 20 three-model combinations. Each model is also adapted with QLoRA on the training partition, with the loss computed on the English response only, and the checkpoint with the lowest development loss is kept. Candidates are generated once per model and dataset by greedy decoding with each model's own prompt format, and a shared cleaner removes labels such as ``Translation in English:'' and keeps the first non-empty line.
+
+\paragraph{Selectors.}
+\emph{COMETKiwi} picks $\arg\max_i Q_{\mathrm{Kiwi}}(x,y_i)$ with \texttt{wmt22-cometkiwi-da}, which sees the source but not the reference. \emph{chrF++ agreement} picks the candidate with the highest mean chrF++ against the other two (Eq.~\ref{eq:consensus}). \emph{BERTScore agreement} does the same with BERTScore F1 (\texttt{deberta-large-mnli}, no IDF weighting or rescaling). Empty candidates are excluded when possible and ties go to candidate order. Twenty trios, three selectors and two variants (pretrained and fine-tuned) give 120 configurations.
+
+\paragraph{Data.}
+After removing duplicate sources (NFKC, case folding, whitespace removal) and sources found in the official test sets, the supplied corpus is split with seed 4248 into 10,739 training pairs for the adapters, 3,068 development pairs (\texttt{dev\_train20}) for checkpoint and configuration selection, and 1,535 internal test pairs (\texttt{test\_train10}). The configuration is fixed on development data before any test evaluation.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lllcccc}
+\toprule
+ & Trio & Selector & BLEU & chrF++ & COMET & BERTS. \\
+\midrule
+PT & H+T+TM  & Kiwi   & 28.05 & 56.80 & 85.16 & 84.09 \\
+PT & H+T+TM  & chrF++ & 29.53 & 58.06 & 84.68 & 84.14 \\
+PT & H+Q7+TM & BERTS. & 28.82 & 56.85 & 85.00 & 84.38 \\
+\midrule
+FT & H+Q7+TM & Kiwi   & 34.62 & 59.67 & \textbf{85.54} & 85.55 \\
+FT & H+T+TM  & chrF++ & 35.22 & 60.69 & 85.21 & 85.46 \\
+FT & H+Q7+TM & BERTS. & 35.10 & 60.08 & 85.34 & 85.69 \\
+\bottomrule
+\end{tabular}
+\caption{Best trio per selector for pretrained (PT) and fine-tuned (FT) models on all 3,068 \texttt{dev\_train20} sentences, with the original decoding settings (before the Tower-Mistral EOS correction). H: Hunyuan-MT-7B; T: TowerInstruct-7B; TM: TowerInstruct-Mistral-7B; Q7: Qwen2.5-7B-Instruct.}
+\label{tab:dev_ensemble_selection}
+\end{table}
+
+\paragraph{Configuration choice.}
+Table~\ref{tab:dev_ensemble_selection} shows the best trio for each selector. With pretrained models the best configuration was Hunyuan-MT-7B, TowerInstruct-7B and TowerInstruct-Mistral-7B with COMETKiwi (85.16 COMET-22). After fine-tuning, Hunyuan-MT-7B, Qwen2.5-7B-Instruct and TowerInstruct-Mistral-7B with COMETKiwi reached 85.54, the highest of all 120 configurations; this gain reflects both adaptation and a different trio. We select by COMET-22 because it uses the source and correlates with expert judgements on Chinese--English better than overlap metrics \citep{freitag-etal-2022-results}.
+
+\section{Experimental Setup}
+\label{sec:experimental_setup}
+
+\subsection{Datasets and Preprocessing}
+\label{subsec:datasets}
+We deleted 27 misaligned pairs of the supplied corpus (original lines 953--977 and 11513--11514) and merged 13 fragmented pairs into six, leaving 15,372 pairs (details in Appendix~\ref{sec:appendix}). The auditors found the same fault independently: scoring each Chinese line against its own and its neighbours' English (sum of forward and reverse likelihood) flagged 60 lines, among them a run of 24 lines (954--977) shifted by one row. The official test sets are WMT22 general Chinese--English (1,875 sentences, reference A) and Tatoeba (469 short sentences, no references); for Tatoeba the framework is tuned on \texttt{dev\_short}, 992 other Tatoeba sentences.
+
+\subsection{Implementation Details}
+\label{subsec:implementation}
+The 7B models run with four-bit NF4 quantisation. The forward auditor is NLLB-200-distilled-1.3B or OPUS-MT zh--en (77M parameters); the reverse auditor is OPUS-MT en--zh. Scores are cached in SQLite by a hash of source and candidate; auditing and selection run on CPU, and selection for WMT22 takes about two minutes once scores are cached. On the final pool the framework uses consensus, the calibrated reverse score and system priors. For the development comparison it is tuned on 1,540 sentences of \texttt{dev\_train20} and evaluated on the other 1,528 (20-sentence blocks); for the test sets it is tuned on all of \texttt{dev\_train20}, or on \texttt{dev\_short} for Tatoeba. Candidates for the test sets were generated from the released adapters with the same prompts and cleaner, at most 512 new tokens and the end-of-sequence token passed explicitly. Our recomputed COMETKiwi choices match the ensemble's on all 3,068 development sentences.
+
+\subsection{Evaluation Metrics}
+\label{subsec:metrics}
+We report SacreBLEU (13a tokenisation), chrF++ and COMET-22 (\texttt{wmt22-comet-da}, $\times 100$). Significance uses paired bootstrap resampling of sentence COMET-22 with 1,000 resamples \citep{koehn-2004-statistical}. To test each signal without references, we damage a greedy translation in one of four ways (delete the middle 30\% of its words, insert five words from another translation, swap a capitalised name, or change a source number) and count how often the signal prefers the intact version. For error profiles, a translation is labelled an omission when a reference name or source number is missing or it is shorter than the 1\% length quantile.
+
+\section{Results and Discussion}
+\label{sec:results}
+
+\subsection{Translation Performance}
+\label{subsec:translation_performance}
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{2}{c}{Dev (eval half)} & \multicolumn{2}{c}{Internal test} & \multicolumn{2}{c}{WMT22} \\
+ & BLEU & COMET & BLEU & COMET & BLEU & COMET \\
+\midrule
+Hunyuan       & \textbf{36.94} & 85.38 & \textbf{36.81} & 85.26 & 28.40 & 81.91 \\
+Qwen2.5       & 30.18 & 84.52 & 30.02 & 84.26 & 24.71 & 81.32 \\
+Tower-M.      & 34.97 & 85.05 & 32.44 & 84.91 & \textbf{30.48} & 82.64 \\
+\midrule
+COMETKiwi     & 34.73 & \textbf{85.62} & 33.72 & \textbf{85.44} & 28.44 & \textbf{83.01} \\
+chrF++ agr.   & 34.98 & 85.22 & 34.16 & 85.16 & 29.42 & 82.54 \\
+Framework     & 35.34 & 85.40 & 36.57 & 85.31 & 28.80 & 82.11 \\
+\bottomrule
+\end{tabular}
+\caption{Fine-tuned ensemble members and selectors. Development scores are on the 1,528-sentence evaluation half of \texttt{dev\_train20}; internal test is \texttt{test\_train10} (1,535 sentences).}
+\label{tab:final_pool}
+\end{table}
+
+\textbf{Final ensemble.} Table~\ref{tab:final_pool} compares selectors on the fine-tuned ensemble. On the development evaluation half, COMETKiwi has the highest COMET-22 (85.62) and beats every other method in at least 99.4\% of bootstrap resamples. The framework is second (85.40), with 0.6 more BLEU and fewer translations labelled as omissions (25.7\% against 26.5\%). The internal test set, from the same corpus as the development data, gives the same ranking: COMETKiwi reaches 85.44 and beats the framework (85.31) in 94.9\% of resamples, and the framework, which there chose Hunyuan-MT for 1,454 of 1,535 sentences, beats chrF++ agreement in 98.3\% but Hunyuan-MT alone only in 90.1\%.
+
+On WMT22 the ranking of the single models reverses: TowerInstruct-Mistral is best and Hunyuan-MT, best on development data, is 0.7 COMET-22 behind. COMETKiwi selection reaches 83.01, above every model and selector in all resamples, with no output containing Chinese; its BLEU, however, is 2.0 below TowerInstruct-Mistral alone, and since COMETKiwi and COMET-22 are trained on similar human judgements, part of this gain may reflect shared metric preferences. chrF++ agreement (82.54) is within 0.1 of the best model. The framework gave the Hunyuan-MT prior the largest weight in its grid and chose that model for 1,727 of 1,875 sentences (82.11). The prior was learned on development data from the training corpus, whereas WMT22 also covers e-commerce, social and conversational text; fine-tuning on that corpus even lowered Hunyuan-MT's WMT22 COMET-22 from 82.55 to 81.91 while raising its BLEU from 20.89 to 28.40. The same prior helps in-domain and hurts on WMT22. We submit COMETKiwi selection for both official test sets.
+
+\textbf{Single-model pools.} On pools sampled from Qwen2.5-1.5B and -3B (one greedy output plus four to eight samples), adding the guard and both likelihood scores to consensus improves COMET-22 by 0.28--0.48 on two development sets, with BLEU gains in all cases and at least 99.9\% of resamples in favour (Table~\ref{tab:audit_results}). On WMT22 with Qwen2.5-3B, the framework raises BLEU from 18.65 to 19.60 and COMET-22 from 80.26 to 80.79 over the greedy output.
+
+\subsection{Comparative Analysis}
+\label{subsec:comparative_analysis}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Injected error & Forward & Reverse & Coverage \\
+\midrule
+Delete 30\% of words  & 96.8--99.0 & 97.5--99.8 & 99.5--100 \\
+Insert 5 words        & 100        & 96.8--98.6 & 0.2--1.0 \\
+Swap a name           & 97.9--100  & 95.3--98.4 & 36.9--40.7 \\
+Change a number       & 98.9--100  & 95.6--100  & 19.8--33.5 \\
+\bottomrule
+\end{tabular}
+\caption{Share (\%) of pairs in which a signal prefers the intact translation to the damaged one, over two models and two development sets (88--509 pairs per cell); 50\% is chance.}
+\label{tab:error_matrix}
+\end{table}
+
+\textbf{What each signal detects.} In Table~\ref{tab:error_matrix}, the forward score always prefers the intact translation when words are inserted, and the reverse score does so for at least 97.5\% of deletions; both detect swapped names and changed numbers. Coverage is nearly perfect on deletions but prefers the damaged translation when words are inserted, because extra target tokens add attention mass to the source, and it is below chance on substitutions, since a wrong name still attends to the source name. Coverage therefore measures whether the source was attended to, not whether the translation is correct: selecting by coverage alone lowered COMET-22 by 2.3, so we use it only to explain and repair omissions.
+
+\textbf{Mixed pools.} When the pool mixes model families, consensus is already strong and the auditors add at most 0.07 COMET-22. Without calibration, the NLLB-1.3B forward auditor chose same-family NLLB-600M outputs for 60.6\% of sentences and lowered COMET-22 by 0.72; calibration removes this loss. In an earlier final pool with NLLB-1.3B in place of Qwen2.5-7B, the framework matched COMETKiwi on development data (85.39 against 85.44) because the reverse score filtered the weaker NMT member; with three strong LLMs, the quality-estimation model is the better selector.
+
+\subsection{Error Analysis}
+\label{subsec:error_analysis}
+The dominant error of the small Qwen models is proper names: of 22 development sentences that mention one Vietnamese politician, six render the name correctly and the others transliterate it from pinyin or substitute another politician. Such substitutions are fluent and do not shorten the translation, which is why coverage misses them while both likelihood scores catch them. On the final ensemble the main limit is domain transfer: weights and priors tuned on in-domain data do not carry over to WMT22, so the development data for selection should match the test domains. Much of the pool's potential is also unused: choosing the best candidate by reference would reach 86.34 COMET-22 on the development evaluation half, against 85.62 for COMETKiwi.
+
+\section{Conclusion}
+\label{sec:conclusion}
+Fine-tuning six LLMs with QLoRA and selecting among three of them per sentence gave our best system: Hunyuan-MT-7B, Qwen2.5-7B and TowerInstruct-Mistral-7B with COMETKiwi selection, which was also the strongest system by COMET-22 on the internal test split and on WMT22, though not by BLEU on WMT22. Small encoder--decoder auditors provide two complementary reference-free signals, forward likelihood against additions and reverse likelihood against omissions, and improve pools sampled from one model at CPU cost. Attention coverage detects deletions only and is better used to explain than to rank. In heterogeneous pools the auditors need per-system calibration, and system priors learned in-domain do not transfer to new domains.
+
+\bibliography{custom,custom_additions}
+
+\appendix
+
+\section{Framework Details}
+\label{sec:appendix}
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcc}
+\toprule
+ & \texttt{dev\_wmt} & \texttt{dev\_alma} \\
+\midrule
+\multicolumn{3}{l}{\emph{Qwen2.5-1.5B pool (9 candidates)}}\\
+Greedy output  & 14.09 / 77.14 & 16.00 / 82.96 \\
+Consensus only & 14.22 / 77.58 & 15.92 / 83.08 \\
+Full framework & \textbf{15.11} / \textbf{77.89} & \textbf{16.60} / \textbf{83.52} \\
+\midrule
+\multicolumn{3}{l}{\emph{Qwen2.5-3B pool (5 candidates)}}\\
+Greedy output  & 17.85 / 77.95 & 19.16 / 83.78 \\
+Consensus only & 17.96 / 78.38 & 18.74 / 83.91 \\
+Full framework & \textbf{18.30} / \textbf{78.86} & \textbf{19.66} / \textbf{84.19} \\
+\bottomrule
+\end{tabular}
+\caption{BLEU / COMET-22 on the evaluation halves of single-model pools.}
+\label{tab:audit_results}
+\end{table}
+
+\textbf{Development sets.} \texttt{dev\_wmt} has 1,033 sentences in 119 documents from the news and user-review domains of the WMT23 general test set; \texttt{dev\_alma} is the 1,002-sentence validation split of the corpus from which the training data is drawn. Both share no source with the training or test data and are split by document into tuning and evaluation halves (535/498 and 482/520) with seed 4248. Samples use $\epsilon$-sampling with $\epsilon=0.02$.
+
+\textbf{Ablation.} Relative to consensus, the forward score adds 0.17--0.37 COMET-22 and the reverse score 0.05--0.37; together they give the largest gain in all four cases. Replacing the 1.3B forward auditor with the 77M OPUS-MT model changes the gain by at most 0.17.
+
+\textbf{Coverage and repair.} Attention is taken from the penultimate decoder layer, averaged over heads, with special tokens masked and rows renormalised. As a repair trigger, coverage fires on 1.6\% and 3.3\% of sentences with precision 62.5\% and 47.1\%, against omission rates of 26.9\% and 31.9\%. An instruction model (Qwen2.5-1.5B) receives the source, the draft and the specific problem (e.g.\ ``it omits the number 114'') and rewrites once; the selector adopted 4 of 13 and 8 of 30 rewrites, gaining 1.16 and 0.89 COMET-22 on those sentences but only 0.01 overall. One adopted rewrite invented a month. The number rule of the guard exempts months, quantities followed by \emph{wan}/\emph{yi}, list markers and small numbers written as words.
+
+\textbf{Corpus revision.} Consolidated line groups: 2595--2596, 2619--2621, 2626--2627, 2628--2629, 4050--4051 and 4265--4266. The auditors flagged 60 of 15,406 lines (0.39\%) when a neighbouring English line scored at least 0.5 nats per token higher than the line's own.
+
+\end{document}

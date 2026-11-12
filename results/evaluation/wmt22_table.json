@@ -1,0 +1,88 @@
+{
+  "scores": {
+    "hunyuan (ft) alone": {
+      "bleu": 28.4,
+      "chrfpp": 55.52,
+      "comet22": 81.91,
+      "han": 0,
+      "empty": 0,
+      "omission": 0.2037
+    },
+    "qwen2.5-7b (ft) alone": {
+      "bleu": 24.71,
+      "chrfpp": 52.71,
+      "comet22": 81.32,
+      "han": 2,
+      "empty": 0,
+      "omission": 0.2181
+    },
+    "tower-mistral (ft) alone": {
+      "bleu": 30.48,
+      "chrfpp": 57.05,
+      "comet22": 82.64,
+      "han": 4,
+      "empty": 0,
+      "omission": 0.1973
+    },
+    "v2 consensus": {
+      "bleu": 29.42,
+      "chrfpp": 56.85,
+      "comet22": 82.54,
+      "han": 1,
+      "empty": 0,
+      "omission": 0.1851
+    },
+    "v2 ours (prior+consensus+reverse)": {
+      "bleu": 28.8,
+      "chrfpp": 55.94,
+      "comet22": 82.11,
+      "han": 0,
+      "empty": 0,
+      "omission": 0.1973
+    },
+    "v2 cometkiwi selection": {
+      "bleu": 28.44,
+      "chrfpp": 55.78,
+      "comet22": 83.01,
+      "han": 0,
+      "empty": 0,
+      "omission": 0.192
+    },
+    "v2 ours + kiwi feature": {
+      "bleu": 28.84,
+      "chrfpp": 55.98,
+      "comet22": 82.13,
+      "han": 0,
+      "empty": 0,
+      "omission": 0.1963
+    },
+    "v1 consensus (nllb pool)": {
+      "bleu": 29.8,
+      "chrfpp": 57.05,
+      "comet22": 82.23,
+      "han": 2,
+      "empty": 0,
+      "omission": 0.1904
+    },
+    "v1 ours (nllb pool)": {
+      "bleu": 29.68,
+      "chrfpp": 56.78,
+      "comet22": 82.23,
+      "han": 0,
+      "empty": 0,
+      "omission": 0.1941
+    }
+  },
+  "bootstrap": {
+    "ours>hunyuan": 1.0,
+    "consensus>hunyuan": 1.0,
+    "consensus>ours": 1.0,
+    "consensus>tower-mistral": 0.15,
+    "ours>tower-mistral": 0.0,
+    "kiwi>tower-mistral": 1.0,
+    "kiwi>consensus": 1.0,
+    "kiwi>ours": 1.0,
+    "kiwi>hunyuan": 1.0,
+    "ours+kiwi>kiwi": 0.0
+  }
+}

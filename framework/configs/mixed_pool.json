@@ -1,0 +1,289 @@
+{
+  "name": "mixed_pool",
+  "dev": [
+    "dev_wmt",
+    "dev_alma"
+  ],
+  "systems": {
+    "qwen2.5-1.5b": "results/candidates/qwen2.5-1.5b.{dev}.jsonl",
+    "qwen2.5-3b": "results/candidates/qwen2.5-3b.{dev}.jsonl",
+    "opus-mt-zh-en": "results/candidates/opus-mt-zh-en.{dev}.txt",
+    "nllb-600m": "results/candidates/nllb-600m.{dev}.txt"
+  },
+  "scorers": {
+    "nllb_fwd": {
+      "type": "likelihood",
+      "name": "nllb1.3b.fwd",
+      "model": "facebook/nllb-200-distilled-1.3B",
+      "src_lang": "zho_Hans",
+      "tgt_lang": "eng_Latn",
+      "batch_size": 16
+    },
+    "opus_fwd": {
+      "type": "likelihood",
+      "name": "opusmt.zh-en.fwd",
+      "model": "Helsinki-NLP/opus-mt-zh-en",
+      "batch_size": 32
+    },
+    "opus_rev": {
+      "type": "likelihood",
+      "name": "opusmt.en-zh.rev",
+      "model": "Helsinki-NLP/opus-mt-en-zh",
+      "reverse": true,
+      "prefix": ">>cmn_Hans<< ",
+      "batch_size": 32
+    },
+    "opus_cov": {
+      "type": "coverage",
+      "name": "opusmt.zh-en.cov.L-2",
+      "model": "Helsinki-NLP/opus-mt-zh-en",
+      "layer": -2,
+      "batch_size": 16
+    }
+  },
+  "features": {
+    "fwd": "nllb_fwd",
+    "rev": "opus_rev"
+  },
+  "methods": [
+    {
+      "name": "greedy",
+      "type": "first"
+    },
+    {
+      "name": "qwen2.5-3b_only",
+      "type": "system",
+      "system": "qwen2.5-3b"
+    },
+    {
+      "name": "opus-mt_only",
+      "type": "system",
+      "system": "opus-mt-zh-en"
+    },
+    {
+      "name": "nllb-600m_only",
+      "type": "system",
+      "system": "nllb-600m"
+    },
+    {
+      "name": "mbr",
+      "guard": false,
+      "grid": {
+        "mbr": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+rule",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "rule": [
+          0,
+          0.01,
+          0.02,
+          0.05,
+          0.1
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+fwd",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "fwd": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+fwd_cal",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "fwd_cal": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+rev",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "rev": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+rev_cal",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "rev_cal": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+fwd+rev",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "fwd": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ],
+        "rev": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+fwd_cal+rev_cal",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "fwd_cal": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ],
+        "rev_cal": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+rule+fwd+rev",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "rule": [
+          0,
+          0.02,
+          0.05
+        ],
+        "fwd": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ],
+        "rev": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "mbr+guard+rule+fwd_cal+rev_cal",
+      "guard": true,
+      "grid": {
+        "mbr": [
+          1
+        ],
+        "rule": [
+          0,
+          0.02,
+          0.05
+        ],
+        "fwd_cal": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ],
+        "rev_cal": [
+          0,
+          0.02,
+          0.05,
+          0.1,
+          0.2,
+          0.5
+        ]
+      }
+    },
+    {
+      "name": "oracle",
+      "type": "oracle"
+    }
+  ],
+  "calibrate": {
+    "fwd_cal": "fwd",
+    "rev_cal": "rev"
+  }
+}

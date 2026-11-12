@@ -1,0 +1,36 @@
+{
+  "dev_train20": {
+    "hunyuan-mt-7b": 1101,
+    "qwen2.5-7b": 900,
+    "tower-mistral-7b": 1067,
+    "mean_kiwi_selected": 82.93
+  },
+  "dev_short": {
+    "hunyuan-mt-7b": 603,
+    "qwen2.5-7b": 211,
+    "tower-mistral-7b": 178,
+    "mean_kiwi_selected": 85.19
+  },
+  "test_wmt22": {
+    "hunyuan-mt-7b": 689,
+    "qwen2.5-7b": 551,
+    "tower-mistral-7b": 635,
+    "mean_kiwi_selected": 80.17
+  },
+  "test_tatoeba": {
+    "hunyuan-mt-7b": 279,
+    "qwen2.5-7b": 99,
+    "tower-mistral-7b": 91,
+    "mean_kiwi_selected": 84.3
+  },
+  "test_train10": {
+    "hunyuan-mt-7b": 569,
+    "qwen2.5-7b": 449,
+    "tower-mistral-7b": 517,
+    "mean_kiwi_selected": 82.83
+  },
+  "dev_train20_check": {
+    "same_lines": 3068,
+    "n": 3068
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "model": "qwen2.5-3b",
+  "src": "../tatoeba.zh",
+  "name": "test_tatoeba",
+  "n_samples": 4,
+  "epsilon": 0.02,
+  "seed": 4248,
+  "seconds": 87.2
+}

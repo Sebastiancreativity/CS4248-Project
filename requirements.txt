@@ -1,0 +1,12 @@
+torch==2.11.0
+transformers==4.57.6
+peft==0.21.0
+bitsandbytes==0.50.2
+accelerate==1.15.0
+unbabel-comet==2.2.7
+sacrebleu==2.6.0
+datasets==5.0.1
+opencc-python-reimplemented==0.1.7
+numpy==1.26.4
+sentencepiece==0.2.2
+sacremoses==0.2.0

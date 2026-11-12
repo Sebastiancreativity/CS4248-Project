@@ -1,0 +1,97 @@
+{
+  "name": "safety_qwen3b",
+  "method": {
+    "name": "mbr+guard+rule+fwd+rev",
+    "guard": true,
+    "grid": {
+      "mbr": [
+        1
+      ],
+      "rule": [
+        0,
+        0.02,
+        0.05
+      ],
+      "fwd": [
+        0,
+        0.02,
+        0.05,
+        0.1,
+        0.2,
+        0.5
+      ],
+      "rev": [
+        0,
+        0.02,
+        0.05,
+        0.1,
+        0.2,
+        0.5
+      ]
+    }
+  },
+  "targets": {
+    "wmt22": {
+      "dev": [
+        "dev_wmt",
+        "dev_alma"
+      ],
+      "n_dev": 2035,
+      "n_test": 1875,
+      "weights": {
+        "mbr": 1,
+        "rule": 0.05,
+        "fwd": 0.5,
+        "rev": 0.5
+      },
+      "dev_chrfpp": 47.156,
+      "systems": [
+        "qwen2.5-3b"
+      ],
+      "picked": {
+        "nllb-600m:1best": 44,
+        "qwen2.5-3b:greedy": 777,
+        "qwen2.5-3b:sample": 1054
+      },
+      "chosen_with_hard_tag": 3,
+      "fallback_added": 46,
+      "out": "D:\\NUS Class\\CS4248 Project\\official\\results\\submission\\safety_qwen3b\\wmt22.en",
+      "test_scored_once": {
+        "bleu": 19.6,
+        "chrfpp": 48.61,
+        "comet22": 80.79,
+        "first_candidate": {
+          "bleu": 18.65,
+          "comet22": 80.26
+        }
+      },
+      "seconds": 126.2
+    },
+    "tatoeba": {
+      "dev": [
+        "dev_short"
+      ],
+      "n_dev": 992,
+      "n_test": 469,
+      "weights": {
+        "mbr": 1,
+        "rule": 0,
+        "fwd": 0.5,
+        "rev": 0.2
+      },
+      "dev_chrfpp": 60.385,
+      "systems": [
+        "qwen2.5-3b"
+      ],
+      "picked": {
+        "nllb-600m:1best": 1,
+        "qwen2.5-3b:greedy": 378,
+        "qwen2.5-3b:sample": 90
+      },
+      "chosen_with_hard_tag": 0,
+      "fallback_added": 1,
+      "out": "D:\\NUS Class\\CS4248 Project\\official\\results\\submission\\safety_qwen3b\\tatoeba.en",
+      "seconds": 15.8
+    }
+  }
+}

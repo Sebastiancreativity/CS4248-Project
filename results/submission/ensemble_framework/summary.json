@@ -1,0 +1,137 @@
+{
+  "name": "ensemble_framework",
+  "method": {
+    "name": "prior+mbr+rev",
+    "guard": true,
+    "grid": {
+      "mbr": [
+        1
+      ],
+      "sys_hunyuan-mt-7b": [
+        0,
+        0.02,
+        0.05,
+        0.1,
+        0.2,
+        0.5
+      ],
+      "sys_tower-mistral-7b": [
+        0,
+        0.02,
+        0.05,
+        0.1
+      ],
+      "rev_cal": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.5
+      ]
+    }
+  },
+  "targets": {
+    "wmt22": {
+      "dev": [
+        "dev_train20"
+      ],
+      "n_dev": 3068,
+      "n_test": 1875,
+      "weights": {
+        "mbr": 1,
+        "sys_hunyuan-mt-7b": 0.5,
+        "sys_tower-mistral-7b": 0.1,
+        "rev_cal": 0.5
+      },
+      "dev_chrfpp": 60.82,
+      "systems": [
+        "hunyuan-mt-7b",
+        "qwen2.5-7b",
+        "tower-mistral-7b"
+      ],
+      "picked": {
+        "hunyuan-mt-7b:1best": 1727,
+        "qwen2.5-7b:1best": 50,
+        "tower-mistral-7b:1best": 98
+      },
+      "chosen_with_hard_tag": 3,
+      "fallback_added": 0,
+      "out": "D:\\NUS Class\\CS4248 Project\\official\\results\\submission\\final_v2_audit\\wmt22.en",
+      "test_scored_once": {
+        "bleu": 28.8,
+        "chrfpp": 55.94,
+        "comet22": 82.11,
+        "first_candidate": {
+          "bleu": 28.4,
+          "comet22": 81.91
+        }
+      },
+      "seconds": 203.6
+    },
+    "tatoeba": {
+      "dev": [
+        "dev_short"
+      ],
+      "n_dev": 992,
+      "n_test": 469,
+      "weights": {
+        "mbr": 1,
+        "sys_hunyuan-mt-7b": 0.2,
+        "sys_tower-mistral-7b": 0.1,
+        "rev_cal": 0.5
+      },
+      "dev_chrfpp": 62.558,
+      "systems": [
+        "hunyuan-mt-7b",
+        "qwen2.5-7b",
+        "tower-mistral-7b"
+      ],
+      "picked": {
+        "hunyuan-mt-7b:1best": 370,
+        "qwen2.5-7b:1best": 22,
+        "tower-mistral-7b:1best": 77
+      },
+      "chosen_with_hard_tag": 0,
+      "fallback_added": 0,
+      "out": "D:\\NUS Class\\CS4248 Project\\official\\results\\submission\\final_v2_audit\\tatoeba.en",
+      "seconds": 20.6
+    },
+    "internal": {
+      "dev": [
+        "dev_train20"
+      ],
+      "n_dev": 3068,
+      "n_test": 1535,
+      "weights": {
+        "mbr": 1,
+        "sys_hunyuan-mt-7b": 0.5,
+        "sys_tower-mistral-7b": 0.1,
+        "rev_cal": 0.5
+      },
+      "dev_chrfpp": 60.82,
+      "systems": [
+        "hunyuan-mt-7b",
+        "qwen2.5-7b",
+        "tower-mistral-7b"
+      ],
+      "picked": {
+        "hunyuan-mt-7b:1best": 1454,
+        "qwen2.5-7b:1best": 25,
+        "tower-mistral-7b:1best": 56
+      },
+      "chosen_with_hard_tag": 0,
+      "fallback_added": 0,
+      "out": "D:\\NUS Class\\CS4248 Project\\official\\results\\submission\\internal_v2_audit\\internal.en",
+      "test_scored_once": {
+        "bleu": 36.57,
+        "chrfpp": 60.96,
+        "comet22": 85.31,
+        "first_candidate": {
+          "bleu": 36.81,
+          "comet22": 85.26
+        }
+      },
+      "seconds": 181.7
+    }
+  }
+}
