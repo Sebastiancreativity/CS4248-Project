@@ -18,7 +18,7 @@ SETS = {
     "wmt22": ("data/test/wmttest2022.zh", "data/test/wmttest2022.AnnA.en", "test_wmt22", "wmt22.en"),
     "internal": ("data/test/test_train10.zh", "data/test/test_train10.en", "test_train10", "internal.en"),
 }
-SELECTORS = {"cometkiwi": "final_cometkiwi", "consensus": "ensemble_consensus", "framework": "ensemble_framework"}
+SELECTORS = {"cometkiwi": "ensemble_cometkiwi", "consensus": "ensemble_consensus", "framework": "ensemble_framework"}
 
 
 def read(p):

@@ -4,21 +4,23 @@ CS4248 (AY2026/27 Sem 1), Group G20. Task: Chinese → English translation, eval
 
 The system has two parts that communicate only through text files:
 
-1. **Candidate generation** (team). Six open LLMs are adapted with QLoRA and combined in three-model ensembles. The final ensemble is fine-tuned Hunyuan-MT-7B, Qwen2.5-7B-Instruct and TowerInstruct-Mistral-7B-v0.2.
-2. **Selection** (this repository). One candidate is chosen per sentence without the reference. We compare multi-model voting (chrF++ consensus), COMETKiwi quality estimation and our **auditing framework**. The framework adds a rule guard and forward/reverse likelihood scores from small encoder–decoder models (OPUS-MT, NLLB) to consensus. It reads only text, so it works with candidates from any model.
+1. **Adaptation and ensembles** (team repository). Eight open models are adapted (QLoRA for the six causal LLMs, LoRA for MADLAD/NLLB). 40 three-model trios × 3 selectors × 2 variants give 240 development configurations. The selectors are COMETKiwi, chrF++ agreement and BERTScore agreement.
+2. **Candidate auditing** (this repository). An auditing framework adds a rule guard and forward/reverse likelihood scores from small encoder–decoder models (OPUS-MT, NLLB) to chrF++ agreement (consensus). It reads only text, so it works with candidates from any model. The repository also holds the auditing and selection experiments reported in the paper.
 
-**Final submission:** `results/submission/final_cometkiwi/wmt22.en` and `tatoeba.en` (COMETKiwi selection over the fine-tuned ensemble).
+**Final system (paper Table 1):** the development-selected, EOS-corrected fine-tuned Hunyuan-MT-7B + TowerInstruct-7B + TowerInstruct-Mistral-7B ensemble with COMETKiwi selection, produced in the team repository. It scores 29.74 BLEU / 83.07 COMET-22 on WMT22, 42.85 / 89.45 on Tatoeba and 34.60 / 85.47 on the internal test set.
+
+**This repository's ensemble experiments (paper Table 2)** use the earlier fine-tuned Hunyuan + Qwen2.5-7B + Tower-Mistral (H+Q+TM) pool. That pool was selected before the EOS correction. Its outputs are in `results/submission/` (`ensemble_cometkiwi` = COMETKiwi, `ensemble_consensus` = chrF++ agreement, `ensemble_framework` = auditing).
 
 ## Data
 
 | Use | Data |
 | --- | --- |
-| Official test sets | `data/test/wmttest2022.zh`, `wmttest2022.AnnA.en` (1,875), `tatoeba.zh` (469, no reference) |
-| Training corpus | `data/train/train.zh-en.{zh,en}` (15,406 pairs, course-provided) |
+| Official test sets | `data/test/wmttest2022.zh`, `wmttest2022.AnnA.en` (1,875, Annotator A); `tatoeba.zh` (469; its English reference is in the team repository) |
+| Training corpus | `data/train/train.zh-en.{zh,en}` (15,406 course-provided pairs; 15,372 after the alignment revision) |
 | Ensemble development / internal test | `data/dev/dev_train20` (3,068) and `data/test/test_train10` (1,535): seed-4248 70/20/10 split of the revised corpus |
 | Framework development | `data/dev/dev_wmt` (1,033, WMT23 news + user review), `dev_alma` (1,002, ALMA validation), `dev_short` (992, Tatoeba) |
 
-The two parts use different data. **Time was short for the candidate pool**, so the ensemble was trained and selected **only on the course-provided corpus**. To make selection as reliable as possible, **the framework uses all available data**: its own development sets (WMT23, the ALMA validation split and Tatoeba sentences) as well as `dev_train20`. No development sentence overlaps the test sets or the training corpus (checked after script conversion and whitespace removal). Test references are used only for scoring, never for tuning or selection.
+The two parts use different data. **Time was short for the candidate pool**, so the models were adapted and the ensembles selected **only on the course-provided corpus**. To make the auditing results as reliable as possible, **the framework uses all available data**. Besides `dev_train20`, it uses three public development sets: the WMT23 general test set (news and user-review domains), the ALMA-Human-Parallel validation split, and Tatoeba sentences outside the official test. No development sentence overlaps the test sets or the training corpus (checked after script conversion and whitespace removal). Test references are used only for scoring, never for tuning or selection.
 
 ## Repository layout
 
@@ -35,7 +37,7 @@ results/
   framework/          development experiments (metrics.json, selected outputs, decision records)
   ensemble_selectors/ team selector outputs (chrF++, BERTScore) and COMETKiwi picks
   cometkiwi_scores/   sentence-level COMETKiwi scores
-  submission/         test outputs: final_cometkiwi, ensemble_framework, ensemble_consensus, qwen3b_selfpool_test
+  submission/         test outputs: ensemble_cometkiwi, ensemble_framework, ensemble_consensus, qwen3b_selfpool_test
   evaluation/         WMT22 and internal-test tables with bootstrap results
   train_audit/        misaligned training pairs found by the auditors
 report/paper/    main_v5_full.tex (full paper), main_v5_4page.tex (4-page version), custom_additions.bib
@@ -67,8 +69,9 @@ python scripts/4_evaluation/score_test_sets.py
 | 7–10 Oct | New plan: consensus (MBR) over LLM candidates first, then an encoder–decoder auditor. Built the development sets and screened Qwen2.5. |
 | 20 Oct | Framework: rule guard + consensus + forward/reverse likelihood, with every score cached by content. The team took over candidate models. |
 | 29 Oct | Mixed pools (Qwen + OPUS-MT + NLLB) showed that auditors favour their own model family; added per-system calibration. Controlled error injection showed which signal detects which error. |
-| 8–11 Nov | Team delivered fine-tuned ensembles. The final trio replaced NLLB-1.3B with Qwen2.5-7B. Added system priors, then ran COMETKiwi locally and reproduced the team's selection exactly (3,068/3,068 sentences). |
-| 12 Nov | Rebuilt the internal test split and evaluated every selector on it. |
+| 8–11 Nov | Team delivered fine-tuned ensembles. The selected trio then was H+Q+TM. Added system priors, then ran COMETKiwi locally and reproduced the team's selection exactly (3,068/3,068 sentences). |
+| 12 Nov | Rebuilt the internal test split and evaluated every selector on the H+Q+TM pool (paper Table 2). |
+| 12–13 Nov | Team corrected Tower-Mistral's EOS token and re-ran development selection; the final system became H+T+TM with COMETKiwi (paper Table 1). |
 
 ## Results
 
@@ -94,16 +97,16 @@ The pools are one greedy translation plus samples from small Qwen models. Result
 
 **On a mixed pool, voting beats every member.** The pool has four systems: Qwen2.5-1.5B, Qwen2.5-3B, OPUS-MT and NLLB-600M. Consensus over them reaches 78.82 on dev_wmt and 84.01 on dev_alma. That is +0.87 and +0.23 over the best member (Qwen2.5-3B: 77.95 / 83.78). It is also far above the weak members: OPUS-MT scores 72.06 / 80.56, NLLB-600M 73.25 / 82.00 and Qwen2.5-1.5B 77.14 / 82.96.
 
-**On the fine-tuned ensemble, voting lifts the pool well above its weakest member.**
+**On the earlier fine-tuned H+Q+TM ensemble (paper Table 2), voting lifts the pool well above its weakest member.**
 
 | System | Internal test BLEU / COMET | WMT22 BLEU / COMET |
 | --- | --- | --- |
 | Hunyuan-MT-7B alone | **36.81** / 85.26 | 28.40 / 81.91 |
 | Qwen2.5-7B alone | 30.02 / 84.26 | 24.71 / 81.32 |
 | Tower-Mistral-7B alone | 32.44 / 84.91 | **30.48** / 82.64 |
-| chrF++ voting (consensus) | 34.16 / 85.16 | 29.42 / 82.54 |
+| chrF++ agreement (voting) | 34.16 / 85.16 | 29.42 / 82.54 |
 | Auditing framework | 36.57 / 85.31 | 28.80 / 82.11 |
-| **COMETKiwi selection (final)** | 33.72 / **85.44** | 28.44 / **83.01** |
+| **COMETKiwi selection** | 33.72 / **85.44** | 28.44 / **83.01** |
 
 - **Voting versus the weakest member.** Voting is +0.90 (internal) and +1.22 (WMT22) above Qwen2.5-7B alone. On WMT22 it is also above Hunyuan-MT-7B in 100% of resamples.
 - **Why voting does not beat the best member.** In each domain one member is much stronger than the others. On the internal test, Hunyuan-MT-7B leads the others by 4–7 BLEU. On WMT22, Tower-Mistral-7B leads. Voting gives every member an equal vote, so it still picks the weaker members' translations often. It ends 0.10 below the best member on both sets, and on WMT22 the gap is not significant (Tower-Mistral is higher in only 85% of resamples).

@@ -23,7 +23,7 @@ def main():
     model = None
     scores_dir = ROOT / "results" / "cometkiwi_scores"
     sel_dir = ROOT / "results" / "ensemble_selectors"
-    sub = ROOT / "results" / "submission" / "final_cometkiwi"
+    sub = ROOT / "results" / "submission" / "ensemble_cometkiwi"
     for d in (scores_dir, sel_dir, sub):
         d.mkdir(parents=True, exist_ok=True)
     summary = {}
